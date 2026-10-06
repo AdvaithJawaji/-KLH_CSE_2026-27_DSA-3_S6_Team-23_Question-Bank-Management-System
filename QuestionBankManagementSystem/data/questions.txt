@@ -1,0 +1,100 @@
+Q001|Data Structures|Unit 3|Medium|CO3|10|Explain the working of a stack using array implementation.|stack array
+Q002|Operating Systems|Unit 2|Hard|CO2|10|Describe CPU scheduling algorithms and compare FCFS with SJF.|scheduling os cpu
+Q003|Data Structures|Unit 1|Easy|CO1|5|Define a queue and list its real-world applications.|queue
+Q004|Database Systems|Unit 2|Medium|CO2|8|What is normalization? Explain 1NF, 2NF and 3NF with examples.|normalization database
+Q005|Computer Networks|Unit 4|Hard|CO4|10|Explain the TCP three-way handshake with a diagram.|tcp networking
+Q006|Algorithms|Unit 3|Medium|CO3|10|Trace Dijkstra's algorithm on a weighted graph of your choice.|graph shortest-path dijkstra
+Q007|Operating Systems|Unit 2|Medium|CO2|8|Compare CPU scheduling algorithms with respect to average waiting time.|scheduling os
+Q008|Data Structures|Unit 4|Hard|CO4|10|Explain AVL tree rotations with a suitable example.|tree avl
+Q009|Database Systems|Unit 3|Hard|CO3|10|Explain ACID properties of a transaction with examples.|transactions database
+Q010|Computer Networks|Unit 1|Easy|CO1|5|Differentiate between the OSI and TCP/IP reference models.|osi networking
+Q011|Algorithms|Unit 2|Easy|CO2|5|Explain the divide and conquer paradigm with merge sort as an example.|sorting divide-conquer
+Q012|Data Structures|Unit 3|Medium|CO3|10|Explain how a stack can be implemented using a linked list.|stack linked-list
+Q013|Operating Systems|Unit 3|Hard|CO3|10|Explain deadlock avoidance using Banker's algorithm.|deadlock os
+Q014|Algorithms|Unit 4|Hard|CO4|10|Explain the 0/1 Knapsack problem and solve it using dynamic programming.|knapsack dp
+Q015|Database Systems|Unit 1|Easy|CO1|5|Define primary key, foreign key, and candidate key with examples.|keys database
+Q016|Computer Networks|Unit 3|Medium|CO3|8|Explain the sliding window protocol used for flow control.|flow-control networking
+Q017|Data Structures|Unit 1|Easy|CO1|5|Explain the difference between a stack and a queue with examples from real life.|stack queue data
+Q018|Data Structures|Unit 2|Medium|CO2|8|Describe the linked list representation and explain insertion at the beginning and end.|linked-list insertion
+Q019|Data Structures|Unit 4|Hard|CO4|10|Discuss the time complexity of binary search tree operations such as insert, delete, and search.|bst complexity tree
+Q020|Data Structures|Unit 2|Medium|CO2|8|Differentiate between linear search and binary search with respect to sorted data.|search algorithm
+Q021|Data Structures|Unit 3|Hard|CO3|10|Explain how hashing resolves collisions using separate chaining and open addressing.|hashing collision
+Q022|Data Structures|Unit 4|Medium|CO4|8|What is a graph? Explain adjacency matrix and adjacency list representations.|graph representation
+Q023|Data Structures|Unit 1|Easy|CO1|5|Define recursion and explain how it differs from iteration.|recursion iteration
+Q024|Algorithms|Unit 1|Easy|CO1|5|State the difference between greedy and dynamic programming approaches.|greedy dp
+Q025|Algorithms|Unit 2|Medium|CO2|8|Write the algorithm for binary search and analyse its complexity.|binary-search complexity
+Q026|Algorithms|Unit 3|Hard|CO3|10|Explain the concept of topological sorting and give an example.|topological-sort graph
+Q027|Algorithms|Unit 1|Medium|CO1|8|Discuss the time complexity of quicksort and merge sort in best, average, and worst cases.|quicksort mergesort
+Q028|Algorithms|Unit 4|Hard|CO4|10|Explain how BFS differs from DFS and where each is usually applied.|bfs dfs graph
+Q029|Algorithms|Unit 2|Medium|CO2|8|Describe the working of the Rabin-Karp string matching algorithm.|rabin-karp string
+Q030|Algorithms|Unit 3|Hard|CO3|10|Explain the Aho-Corasick algorithm and its application to multi-pattern searching.|aho-corasick matching
+Q031|Algorithms|Unit 1|Easy|CO1|5|What is the purpose of asymptotic notation? Explain Big O notation.|big-o complexity
+Q032|Operating Systems|Unit 1|Easy|CO1|5|Define process and thread and explain the major differences between them.|process thread
+Q033|Operating Systems|Unit 1|Medium|CO1|8|Explain the process states in a typical operating system.|process states
+Q034|Operating Systems|Unit 2|Hard|CO2|10|Compare preemptive and non-preemptive scheduling with examples.|scheduling preemptive
+Q035|Operating Systems|Unit 3|Medium|CO3|8|Explain the concepts of deadlock prevention and deadlock recovery.|deadlock prevention
+Q036|Operating Systems|Unit 4|Hard|CO4|10|Describe memory management techniques including paging and segmentation.|paging segmentation
+Q037|Operating Systems|Unit 2|Easy|CO2|5|What is a semaphore? Explain how it helps in process synchronization.|semaphore os
+Q038|Operating Systems|Unit 3|Medium|CO3|8|Differentiate between user-level and kernel-level threads.|threads kernel
+Q039|Operating Systems|Unit 4|Medium|CO4|8|Explain page replacement algorithms such as FIFO and LRU.|page-replacement memory
+Q040|Database Systems|Unit 1|Easy|CO1|5|What is a database and how is it different from a file system?|database file-system
+Q041|Database Systems|Unit 2|Medium|CO2|8|Explain the difference between logical and physical data independence.|data-independence database
+Q042|Database Systems|Unit 3|Hard|CO3|10|Explain the role of indexes in database performance and discuss B-tree indexes.|indexing database
+Q043|Database Systems|Unit 1|Medium|CO1|8|Describe the E-R model and explain entity, attribute, and relationship.|er-model database
+Q044|Database Systems|Unit 4|Hard|CO4|10|Explain concurrency control and discuss locking protocols.|locking concurrency
+Q045|Database Systems|Unit 2|Easy|CO2|5|What are joins in SQL? Explain inner join and outer join with simple examples.|sql join
+Q046|Database Systems|Unit 3|Medium|CO3|8|Explain functional dependency and its role in normalization.|functional-dependency normalization
+Q047|Computer Networks|Unit 1|Easy|CO1|5|Define switching and describe circuit switching and packet switching.|switching networking
+Q048|Computer Networks|Unit 2|Medium|CO2|8|Explain IP addressing and the difference between IPv4 and IPv6.|ipv4 ipv6 addressing
+Q049|Computer Networks|Unit 2|Hard|CO2|10|Describe the role of routing algorithms and explain distance vector routing.|routing algorithms
+Q050|Computer Networks|Unit 3|Medium|CO3|8|Compare TCP and UDP based on reliability, ordering, and connection management.|tcp udp
+Q051|Computer Networks|Unit 4|Hard|CO4|10|Explain subnetting and how it helps in efficient IP address allocation.|subnetting ip
+Q052|Computer Networks|Unit 1|Medium|CO1|8|What is the purpose of DNS and how does a domain name resolution work?|dns networking
+Q053|Computer Networks|Unit 3|Easy|CO3|5|State the difference between hub, switch, and router.|network-devices
+Q054|Software Engineering|Unit 1|Easy|CO1|5|What is software engineering and why is it important in large systems?|software engineering
+Q055|Software Engineering|Unit 2|Medium|CO2|8|Explain the waterfall model and list its major phases.|waterfall process
+Q056|Software Engineering|Unit 3|Hard|CO3|10|Compare agile and scrum methodologies for software development.|agile scrum
+Q057|Software Engineering|Unit 4|Medium|CO4|8|Describe requirement gathering techniques and traceability.|requirements engineering
+Q058|Software Engineering|Unit 1|Medium|CO1|8|Explain software design principles such as cohesion and coupling.|design principles
+Q059|Software Engineering|Unit 2|Hard|CO2|10|Discuss risk management in software projects and how it affects planning.|risk management
+Q060|Object Oriented Programming|Unit 1|Easy|CO1|5|What is encapsulation and how does it improve software quality?|encapsulation oop
+Q061|Object Oriented Programming|Unit 2|Medium|CO2|8|Explain inheritance and polymorphism with examples from class design.|inheritance polymorphism
+Q062|Object Oriented Programming|Unit 3|Hard|CO3|10|Describe abstraction and interfaces in Java with suitable examples.|abstract interface
+Q063|Object Oriented Programming|Unit 1|Medium|CO1|8|Compare composition and inheritance in object-oriented design.|composition inheritance
+Q064|Object Oriented Programming|Unit 4|Hard|CO4|10|Explain how exception handling helps in writing robust programs.|exception handling
+Q065|Compiler Design|Unit 1|Medium|CO1|8|What is a compiler and explain its main phases.|compiler phases
+Q066|Compiler Design|Unit 2|Hard|CO2|10|Explain lexical analysis and how tokens are generated from source code.|lexical-analysis tokens
+Q067|Compiler Design|Unit 3|Medium|CO3|8|Describe parsing and the difference between top-down and bottom-up parsing.|parsing grammar
+Q068|Compiler Design|Unit 4|Hard|CO4|10|Explain syntax-directed translation and intermediate code generation.|syntax-directed translation
+Q069|Web Technologies|Unit 1|Easy|CO1|5|What is HTML and what are the main structural elements of a web page?|html web
+Q070|Web Technologies|Unit 2|Medium|CO2|8|Differentiate between client-side scripting and server-side scripting.|javascript server-side
+Q071|Web Technologies|Unit 3|Hard|CO3|10|Explain how forms are processed in a web application with validation logic.|forms validation
+Q072|Web Technologies|Unit 4|Medium|CO4|8|Describe the purpose of CSS and explain the box model.|css layout
+Q073|Web Technologies|Unit 1|Easy|CO1|5|Explain the role of HTTP requests and responses in web communication.|http web
+Q074|Artificial Intelligence|Unit 1|Easy|CO1|5|Define artificial intelligence and list common application areas.|ai applications
+Q075|Artificial Intelligence|Unit 2|Medium|CO2|8|Explain the difference between supervised and unsupervised learning.|machine-learning ai
+Q076|Artificial Intelligence|Unit 3|Hard|CO3|10|Describe a search strategy used in AI and compare depth-first and breadth-first search.|ai search
+Q077|Artificial Intelligence|Unit 4|Medium|CO4|8|What is a heuristic function in AI search problems?|heuristic ai
+Q078|Discrete Mathematics|Unit 1|Easy|CO1|5|Define set operations and explain union, intersection, and difference.|sets math
+Q079|Discrete Mathematics|Unit 2|Medium|CO2|8|Explain propositional logic and truth tables.|logic discrete-math
+Q080|Discrete Mathematics|Unit 3|Hard|CO3|10|Describe graph coloring and explain its relation to constraints.|graph-coloring math
+Q081|Computer Architecture|Unit 1|Easy|CO1|5|Explain the function of the CPU and the role of registers.|cpu architecture
+Q082|Computer Architecture|Unit 2|Medium|CO2|8|Differentiate between RISC and CISC architectures.|risc cisc
+Q083|Computer Architecture|Unit 3|Hard|CO3|10|Describe pipeline hazards and techniques to minimize them.|pipeline architecture
+Q084|Computer Architecture|Unit 4|Medium|CO4|8|Explain memory hierarchy and the role of cache memory.|cache memory
+Q085|Cyber Security|Unit 1|Easy|CO1|5|What is authentication and why is it essential for secure systems?|authentication security
+Q086|Cyber Security|Unit 2|Medium|CO2|8|Describe common network attacks such as phishing and malware.|phishing malware
+Q087|Cyber Security|Unit 3|Hard|CO3|10|Explain encryption and compare symmetric and asymmetric key cryptography.|encryption cryptography
+Q088|Cyber Security|Unit 4|Medium|CO4|8|Discuss digital signatures and their role in data integrity.|digital-signature integrity
+Q089|Mobile Computing|Unit 1|Easy|CO1|5|What are the major features of mobile computing systems?|mobile computing
+Q090|Mobile Computing|Unit 2|Medium|CO2|8|Explain the concept of mobile ad hoc networks and their challenges.|adhoc networks
+Q091|Mobile Computing|Unit 3|Hard|CO3|10|Describe the architecture of a mobile application and its components.|mobile-architecture
+Q092|Cloud Computing|Unit 1|Easy|CO1|5|Define cloud computing and list common service models.|cloud computing
+Q093|Cloud Computing|Unit 2|Medium|CO2|8|Explain virtualization and how it supports cloud resources.|virtualization cloud
+Q094|Cloud Computing|Unit 3|Hard|CO3|10|Discuss load balancing and scaling techniques in distributed cloud systems.|load-balancing cloud
+Q095|Big Data|Unit 1|Easy|CO1|5|What is big data and why is volume velocity and variety important?|big-data analytics
+Q096|Big Data|Unit 2|Medium|CO2|8|Explain the Hadoop ecosystem and the role of HDFS.|hadoop hdfs
+Q097|Big Data|Unit 3|Hard|CO3|10|Discuss data processing frameworks and their use in analytics pipelines.|data-processing big-data
+Q098|Machine Learning|Unit 1|Easy|CO1|5|What is machine learning and how does it differ from traditional programming?|ml programming
+Q099|Machine Learning|Unit 2|Medium|CO2|8|Explain overfitting and underfitting in model training.|overfitting underfitting
+Q100|Machine Learning|Unit 3|Hard|CO3|10|Describe evaluation metrics for classification problems such as accuracy precision and recall.|classification metrics

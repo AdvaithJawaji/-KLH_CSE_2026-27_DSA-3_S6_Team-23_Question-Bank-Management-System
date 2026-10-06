@@ -1,0 +1,79 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "QBMS: Compile",
+      "type": "shell",
+      "command": "javac",
+      "args": [
+        "-d", "out",
+        "-sourcepath", "src",
+        "-encoding", "UTF-8",
+        "${workspaceFolder}/src/Main.java",
+        "${workspaceFolder}/src/model/Question.java",
+        "${workspaceFolder}/src/model/User.java",
+        "${workspaceFolder}/src/model/Paper.java",
+        "${workspaceFolder}/src/model/SearchResult.java",
+        "${workspaceFolder}/src/model/UsageRecord.java",
+        "${workspaceFolder}/src/structures/CustomArrayList.java",
+        "${workspaceFolder}/src/algorithms/NaiveMatcher.java",
+        "${workspaceFolder}/src/algorithms/KMPMatcher.java",
+        "${workspaceFolder}/src/algorithms/ZMatcher.java",
+        "${workspaceFolder}/src/algorithms/RabinKarpMatcher.java",
+        "${workspaceFolder}/src/algorithms/AhoCorasick.java",
+        "${workspaceFolder}/src/algorithms/EditDistanceMatcher.java",
+        "${workspaceFolder}/src/storage/QuestionFileHandler.java",
+        "${workspaceFolder}/src/storage/UserFileHandler.java",
+        "${workspaceFolder}/src/storage/PaperFileHandler.java",
+        "${workspaceFolder}/src/storage/UsageFileHandler.java",
+        "${workspaceFolder}/src/services/AuthService.java",
+        "${workspaceFolder}/src/services/QuestionManager.java",
+        "${workspaceFolder}/src/services/SearchEngine.java",
+        "${workspaceFolder}/src/services/PaperGenerator.java",
+        "${workspaceFolder}/src/services/UsageTracker.java",
+        "${workspaceFolder}/src/ui/InputValidator.java",
+        "${workspaceFolder}/src/ui/Menu.java",
+        "${workspaceFolder}/src/ui/ConsoleUI.java"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$javac"],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QBMS: Run",
+      "type": "shell",
+      "command": "java",
+      "args": ["-cp", "out", "Main"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "QBMS: Compile",
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "QBMS: Compile & Run",
+      "dependsOn": ["QBMS: Compile", "QBMS: Run"],
+      "dependsOrder": "sequence",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}

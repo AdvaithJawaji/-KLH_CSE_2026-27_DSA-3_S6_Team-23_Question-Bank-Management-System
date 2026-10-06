@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "QBMS: Launch",
+      "request": "launch",
+      "mainClass": "Main",
+      "classPaths": ["${workspaceFolder}/out"],
+      "projectName": "QuestionBankManagementSystem",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+}

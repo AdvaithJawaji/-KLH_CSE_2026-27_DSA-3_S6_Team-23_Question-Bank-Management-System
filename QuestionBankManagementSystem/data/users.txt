@@ -1,0 +1,8 @@
+U001|admin|admin123|ADMIN
+U002|faculty1|faculty123|FACULTY
+U003|faculty2|faculty456|FACULTY
+U004|faculty3|faculty789|FACULTY
+U005|admin2|admin456|ADMIN
+U006|faculty4|faculty321|FACULTY
+U007|faculty5|faculty654|FACULTY
+U008|admin3|admin789|ADMIN

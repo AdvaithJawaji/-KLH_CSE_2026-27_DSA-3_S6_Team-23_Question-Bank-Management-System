@@ -1,0 +1,1404 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Question Bank Management System</title>
+<style>
+  :root {
+    --bg-1: #0b1020;
+    --bg-2: #131a2e;
+    --accent-1: #7f77dd;
+    --accent-2: #1d9e75;
+    --accent-3: #d85a30;
+    --danger: #e24b4a;
+    --text-hi: rgba(255,255,255,0.95);
+    --text-mid: rgba(255,255,255,0.68);
+    --text-low: rgba(255,255,255,0.42);
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.14);
+    --glass-hi: rgba(255,255,255,0.22);
+    --radius: 18px;
+  }
+  [data-theme="light"] {
+    --bg-1: #eef1f8;
+    --bg-2: #dfe4f2;
+    --text-hi: #14172a;
+    --text-mid: rgba(20,23,42,0.68);
+    --text-low: rgba(20,23,42,0.45);
+    --glass-bg: rgba(255,255,255,0.65);
+    --glass-border: rgba(20,23,42,0.12);
+    --glass-hi: rgba(255,255,255,0.9);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%; margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    background: var(--bg-1); color: var(--text-hi); overflow-x: hidden;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  body::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(127,119,221,0.35), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(29,158,117,0.28), transparent 40%),
+      radial-gradient(circle at 50% 90%, rgba(216,90,48,0.22), transparent 45%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    z-index: -1; pointer-events: none;
+  }
+  .blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.45; z-index: -1; animation: float 18s ease-in-out infinite; }
+  .blob-a { width: 320px; height: 320px; background: var(--accent-1); top: -80px; left: -60px; }
+  .blob-b { width: 280px; height: 280px; background: var(--accent-2); bottom: 10%; right: -80px; animation-delay: 4s; }
+  .blob-c { width: 220px; height: 220px; background: var(--accent-3); bottom: -60px; left: 30%; animation-delay: 8s; }
+  @keyframes float {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(30px,-20px) scale(1.06); }
+    66% { transform: translate(-20px,25px) scale(0.96); }
+  }
+  .glass {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08);
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1), box-shadow 0.35s ease, border-color 0.35s ease;
+  }
+  .glass:hover { border-color: var(--glass-hi); }
+
+  /* ===== LOGIN ===== */
+  #loginScreen {
+    min-height: 100vh; display: flex; align-items: center;
+    justify-content: center; padding: 24px; position: relative;
+  }
+  .login-card { width: 100%; max-width: 400px; padding: 36px 32px 28px; animation: rise 0.6s cubic-bezier(.2,.8,.2,1) both; }
+  .login-logo { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+  .login-logo svg { width: 72px; height: 72px; filter: drop-shadow(0 8px 20px rgba(127,119,221,0.5)); }
+  .login-title { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.02em; }
+  .login-sub { text-align: center; font-size: 12.5px; color: var(--text-low); margin-bottom: 28px; }
+  .login-field { margin-bottom: 14px; }
+  .login-field label { font-size: 11.5px; color: var(--text-low); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+  .login-error {
+    display: none; font-size: 12.5px; color: var(--danger);
+    background: rgba(226,75,74,0.12); border: 1px solid rgba(226,75,74,0.35);
+    border-radius: 10px; padding: 9px 12px; margin-bottom: 14px; animation: shake 0.4s ease;
+  }
+  .login-error.show { display: block; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); }
+  }
+  .login-hint { text-align: center; font-size: 11px; color: var(--text-low); margin-top: 18px; line-height: 1.8; }
+  .login-hint code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px; color: var(--text-mid); }
+  #loginBtn { width: 100%; justify-content: center; margin-top: 4px; }
+
+  /* ===== APP ===== */
+  #appScreen { display: none; }
+  #appScreen.show { display: block; }
+  .app { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; position: relative; }
+
+  /* ===== TOPBAR ===== */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-logo svg { width: 44px; height: 44px; filter: drop-shadow(0 6px 16px rgba(127,119,221,0.45)); }
+  .brand-title { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+  .brand-sub { font-size: 12px; color: var(--text-low); margin-top: 2px; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .session-pill {
+    font-size: 12px; color: var(--text-mid); background: var(--glass-bg);
+    border: 1px solid var(--glass-border); backdrop-filter: blur(20px) saturate(160%);
+    border-radius: 999px; padding: 7px 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); animation: pulse 2s infinite; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(29,158,117,0.55); }
+    70% { box-shadow: 0 0 0 7px rgba(29,158,117,0); }
+    100% { box-shadow: 0 0 0 0 rgba(29,158,117,0); }
+  }
+  .topbar-btn {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px); border-radius: 999px; padding: 8px 16px;
+    font-size: 13px; color: var(--text-mid); cursor: pointer;
+    transition: all 0.25s cubic-bezier(.2,.8,.2,1);
+  }
+  .topbar-btn:hover { border-color: var(--glass-hi); color: var(--text-hi); transform: translateY(-1px); }
+
+  /* ===== STATS ===== */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .stat-card { padding: 18px 20px; animation: rise 0.6s cubic-bezier(.2,.8,.2,1) both; }
+  .stat-card:nth-child(1){animation-delay:.02s} .stat-card:nth-child(2){animation-delay:.08s}
+  .stat-card:nth-child(3){animation-delay:.14s} .stat-card:nth-child(4){animation-delay:.2s}
+  .stat-label { font-size: 11.5px; color: var(--text-low); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+  .stat-trend { font-size: 11px; margin-top: 6px; color: var(--accent-2); min-height: 14px; }
+  .stat-icon { font-size: 20px; float: right; opacity: 0.6; margin-top: -4px; }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== NAV PILLS ===== */
+  .nav-pills { display: flex; gap: 6px; padding: 6px; margin-bottom: 20px; width: fit-content; max-width: 100%; overflow-x: auto; }
+  .pill {
+    padding: 9px 20px; border-radius: 999px; font-size: 13px; color: var(--text-mid);
+    cursor: pointer; white-space: nowrap; transition: all 0.3s cubic-bezier(.2,.8,.2,1);
+  }
+  .pill.active { color: var(--text-hi); background: rgba(127,119,221,0.28); box-shadow: inset 0 0 0 1px rgba(127,119,221,0.5); }
+  .pill:not(.active):hover { color: var(--text-hi); background: rgba(255,255,255,0.06); }
+
+  /* ===== PANEL ===== */
+  .panel { padding: 28px; min-height: 400px; overflow: visible; }
+  .panel-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.01em; }
+  .panel-sub { font-size: 12.5px; color: var(--text-low); margin-bottom: 22px; }
+  .view { display: none; animation: fadein 0.4s cubic-bezier(.2,.8,.2,1) both; overflow: visible; }
+  .view.active { display: block; }
+
+  /* ===== FORMS ===== */
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; position: relative; z-index: 1; }
+  .field { display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 2; }
+  .field label { font-size: 11px; color: var(--text-low); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  input, textarea {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px;
+    padding: 10px 12px; color: var(--text-hi); font-size: 13.5px; font-family: inherit; outline: none;
+    transition: border-color 0.25s ease, background 0.25s ease; width: 100%;
+  }
+  input::placeholder, textarea::placeholder { color: var(--text-low); }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent-1); background: rgba(255,255,255,0.08); }
+  textarea { resize: vertical; min-height: 75px; }
+  select {
+    appearance: menulist; -webkit-appearance: menulist;
+    cursor: pointer; width: 100%; min-width: 180px; max-width: 100%;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px;
+    padding: 10px 12px; color: var(--text-hi); font-size: 13.5px; font-family: inherit; outline: none;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  .flex-row select { min-width: 180px; }
+  .paper-form select { min-width: 170px; }
+  .custom-dropdown { position: relative; min-width: 180px; }
+  .custom-dropdown-trigger {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px;
+    padding: 10px 12px; color: var(--text-hi); font-size: 13.5px; font-family: inherit; cursor: pointer;
+    text-align: left; transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  .custom-dropdown-trigger::after { content: "▾"; color: var(--text-low); font-size: 12px; }
+  .custom-dropdown.open { z-index: 20; }
+  .custom-dropdown.open .custom-dropdown-trigger { border-color: var(--accent-1); background: rgba(255,255,255,0.08); }
+  .custom-dropdown.open .custom-dropdown-trigger::after { content: "▴"; color: var(--accent-1); }
+  .custom-dropdown-menu {
+    position: absolute; left: 0; right: 0; top: calc(100% + 6px); display: none; padding: 5px;
+    background: #202640; border: 1px solid var(--glass-hi); border-radius: 10px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35); max-height: 220px; overflow-y: auto; z-index: 30;
+  }
+  .custom-dropdown.open .custom-dropdown-menu { display: block; }
+  .custom-dropdown-option {
+    width: 100%; border: 0; border-radius: 7px; background: transparent; color: var(--text-mid);
+    padding: 9px 10px; font: inherit; font-size: 13px; text-align: left; cursor: pointer;
+  }
+  .custom-dropdown-option:hover, .custom-dropdown-option.selected { background: rgba(127,119,221,0.25); color: var(--text-hi); }
+  .custom-dropdown-source { display: none; }
+  [data-theme="light"] .custom-dropdown-menu { background: #f7f8fc; }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 12px;
+    border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-hi);
+    font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.28s cubic-bezier(.2,.8,.2,1);
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.2); border-color: var(--glass-hi); }
+  .btn:active { transform: translateY(0) scale(0.98); }
+  .btn-primary { background: linear-gradient(135deg, var(--accent-1), #5d54c7); border-color: transparent; box-shadow: 0 8px 24px rgba(127,119,221,0.4); }
+  .btn-primary:hover { box-shadow: 0 12px 30px rgba(127,119,221,0.5); }
+  .btn-success { background: linear-gradient(135deg, var(--accent-2), #159a72); border-color: transparent; }
+  .btn-danger { background: linear-gradient(135deg, #e24b4a, #b83737); border-color: transparent; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+  .inline-error { font-size: 12px; color: var(--danger); margin: -4px 0 10px; display: none; }
+  .inline-error.show { display: block; }
+  .inline-success { font-size: 12px; color: var(--accent-2); margin: -4px 0 10px; display: none; }
+  .inline-success.show { display: block; }
+
+  /* ===== SEARCH ===== */
+  .search-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+  .search-bar input { flex: 1; }
+  .algo-chips { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .chip {
+    font-size: 11.5px; padding: 6px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+    color: var(--text-mid); cursor: pointer; transition: all 0.25s ease;
+  }
+  .chip.on { background: rgba(127,119,221,0.25); color: var(--text-hi); border-color: rgba(127,119,221,0.55); }
+  .chip:hover:not(.on) { background: rgba(255,255,255,0.09); color: var(--text-hi); }
+  .search-meta {
+    font-size: 12px; color: var(--text-low); margin-bottom: 12px;
+    display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+  }
+  .meta-badge {
+    display: inline-flex; align-items: center; gap: 5px; background: rgba(127,119,221,0.15);
+    border: 1px solid rgba(127,119,221,0.3); border-radius: 999px;
+    padding: 3px 10px; font-size: 11px; color: var(--accent-1);
+  }
+
+  /* ===== QUESTION CARDS ===== */
+  .qlist { display: flex; flex-direction: column; gap: 10px; max-height: 440px; overflow-y: auto; padding-right: 4px; }
+  .qcard {
+    padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,0.04);
+    border: 1px solid var(--glass-border); transition: all 0.3s cubic-bezier(.2,.8,.2,1);
+  }
+  .qcard:hover { background: rgba(255,255,255,0.08); border-color: var(--glass-hi); transform: translateX(3px); }
+  .qtop { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 7px; }
+  .qid { font-size: 11px; color: var(--accent-1); font-weight: 700; letter-spacing: 0.04em; }
+  .qtext { font-size: 13.5px; line-height: 1.55; color: var(--text-hi); }
+  .qmeta { display: flex; gap: 7px; margin-top: 9px; flex-wrap: wrap; align-items: center; }
+  .tag { font-size: 10.5px; padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.07); color: var(--text-mid); }
+  .tag.diff-easy { background: rgba(99,153,34,0.25); color: #a9d977; }
+  .tag.diff-medium { background: rgba(186,117,23,0.25); color: #f0b559; }
+  .tag.diff-hard { background: rgba(226,75,74,0.25); color: #f29c9c; }
+  .tag.match { background: rgba(127,119,221,0.28); color: #cac5f5; }
+  .qactions { display: flex; gap: 6px; flex-shrink: 0; }
+  .empty-note { padding: 32px; text-align: center; color: var(--text-low); font-size: 13px; }
+
+  /* ===== PAPER ===== */
+  .paper-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+  .paper-form .field:first-child { z-index: 10; }
+  .paper-result {
+    margin-top: 20px; padding: 20px; border-radius: 16px;
+    background: rgba(29,158,117,0.08); border: 1px solid rgba(29,158,117,0.3);
+    animation: rise 0.5s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .paper-result-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+  .paper-result-head .pid { font-size: 15px; font-weight: 700; color: var(--accent-2); }
+  .paper-result-head .pmeta { font-size: 12px; color: var(--text-low); }
+  .dist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 18px; }
+  .dist-card { padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); }
+  .dist-label { font-size: 11px; color: var(--text-low); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .dist-bars { display: flex; align-items: flex-end; gap: 6px; height: 50px; }
+  .dist-bars .b { flex: 1; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--accent-1), rgba(127,119,221,0.3)); transition: height 0.6s cubic-bezier(.2,.8,.2,1); position: relative; }
+  .dist-bars .b span { position: absolute; top: -16px; left: 0; right: 0; text-align: center; font-size: 10px; color: var(--text-low); }
+
+  /* ===== USAGE HISTORY ===== */
+  .usage-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .usage-table th { text-align: left; padding: 8px 12px; font-size: 11px; color: var(--text-low); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--glass-border); }
+  .usage-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .usage-table tr:hover td { background: rgba(255,255,255,0.03); }
+  .usage-count-badge { font-weight: 700; padding: 2px 10px; border-radius: 999px; background: rgba(216,90,48,0.2); color: #f0997b; font-size: 11.5px; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px); z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-card { width: 100%; max-width: 560px; padding: 28px; animation: rise 0.35s cubic-bezier(.2,.8,.2,1); }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .modal-text { font-size: 13px; line-height: 1.6; color: var(--text-mid); margin: 6px 0 18px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ===== BENCHMARK ===== */
+  .benchmark-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 16px; }
+  .bench-card { padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); }
+  .bench-algo { font-size: 12px; font-weight: 600; color: var(--accent-1); margin-bottom: 4px; }
+  .bench-time { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .bench-unit { font-size: 10px; color: var(--text-low); }
+  .bench-bar-wrap { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-top: 8px; }
+  .bench-bar { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--accent-1), var(--accent-2)); transition: width 0.8s cubic-bezier(.2,.8,.2,1); }
+  .bench-comps { font-size: 11px; color: var(--text-low); margin-top: 4px; }
+
+  /* ===== MISC ===== */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  .footer-note { text-align: center; font-size: 11.5px; color: var(--text-low); margin-top: 28px; }
+  .divider { height: 1px; background: var(--glass-border); margin: 16px 0; }
+  .flex-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; overflow: visible; }
+
+  @media (max-width: 720px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .field-row { grid-template-columns: 1fr; }
+    .paper-form { grid-template-columns: 1fr; }
+    .benchmark-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .benchmark-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-a"></div>
+<div class="blob blob-b"></div>
+<div class="blob blob-c"></div>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginScreen">
+  <div class="glass login-card">
+
+    <!-- Project Logo: Open Book with Magnifying Glass -->
+    <div class="login-logo">
+      <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg1" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7f77dd"/>
+            <stop offset="100%" stop-color="#1d9e75"/>
+          </linearGradient>
+          <linearGradient id="lg2" x1="36" y1="0" x2="36" y2="72" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#9f99e8"/>
+            <stop offset="100%" stop-color="#28b88a"/>
+          </linearGradient>
+        </defs>
+        <!-- Book base -->
+        <rect x="6" y="18" width="60" height="40" rx="5" fill="url(#lg1)" opacity="0.18"/>
+        <!-- Book left page -->
+        <path d="M8 20 C8 20 8 54 8 56 C8 58 10 58 12 58 L36 54 L36 20 C36 20 24 16 12 18 C10 18 8 18 8 20Z" fill="url(#lg1)" opacity="0.9"/>
+        <!-- Book right page -->
+        <path d="M64 20 C64 20 64 54 64 56 C64 58 62 58 60 58 L36 54 L36 20 C36 20 48 16 60 18 C62 18 64 18 64 20Z" fill="url(#lg2)" opacity="0.7"/>
+        <!-- Spine line -->
+        <line x1="36" y1="18" x2="36" y2="56" stroke="white" stroke-width="1.5" opacity="0.5"/>
+        <!-- Text lines on left page -->
+        <line x1="14" y1="28" x2="32" y2="27" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="14" y1="34" x2="32" y2="33" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <line x1="14" y1="40" x2="28" y2="39" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <!-- Text lines on right page -->
+        <line x1="40" y1="28" x2="58" y2="27" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        <line x1="40" y1="34" x2="58" y2="33" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        <line x1="40" y1="40" x2="54" y2="39" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+        <!-- Magnifying glass -->
+        <circle cx="52" cy="46" r="8.5" fill="#0b1020" opacity="0.85"/>
+        <circle cx="52" cy="46" r="8.5" stroke="white" stroke-width="2" fill="none" opacity="0.9"/>
+        <circle cx="52" cy="46" r="5" fill="none" stroke="url(#lg2)" stroke-width="2" opacity="0.95"/>
+        <!-- Magnifying glass handle -->
+        <line x1="58.5" y1="52.5" x2="63" y2="57" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+        <!-- Q mark in lens -->
+        <text x="52" y="49.5" text-anchor="middle" font-size="6" fill="white" font-weight="700" font-family="sans-serif" opacity="0.95">Q</text>
+      </svg>
+    </div>
+
+    <div class="login-title">Question Bank Management System</div>
+    <div class="login-sub">DSA-Driven · File Storage · Java Backend</div>
+    <div class="login-error" id="loginError">Invalid username or password.</div>
+    <div class="login-field">
+      <label>Username</label>
+      <input id="loginUser" placeholder="admin" autocomplete="username"/>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button class="btn btn-primary" id="loginBtn">Sign in →</button>
+    <div class="login-hint">
+      <code>admin</code> / <code>admin123</code> (Admin) &nbsp;|&nbsp;
+      <code>faculty1</code> / <code>faculty123</code> (Faculty)
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP SCREEN ================= -->
+<div id="appScreen">
+  <div class="app">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="tlg1" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#7f77dd"/>
+                <stop offset="100%" stop-color="#1d9e75"/>
+              </linearGradient>
+              <linearGradient id="tlg2" x1="36" y1="0" x2="36" y2="72" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#9f99e8"/>
+                <stop offset="100%" stop-color="#28b88a"/>
+              </linearGradient>
+            </defs>
+            <path d="M8 20 C8 20 8 54 8 56 C8 58 10 58 12 58 L36 54 L36 20 C36 20 24 16 12 18 C10 18 8 18 8 20Z" fill="url(#tlg1)" opacity="0.9"/>
+            <path d="M64 20 C64 20 64 54 64 56 C64 58 62 58 60 58 L36 54 L36 20 C36 20 48 16 60 18 C62 18 64 18 64 20Z" fill="url(#tlg2)" opacity="0.75"/>
+            <line x1="36" y1="18" x2="36" y2="56" stroke="white" stroke-width="1.5" opacity="0.5"/>
+            <line x1="14" y1="28" x2="32" y2="27" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+            <line x1="14" y1="34" x2="32" y2="33" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+            <circle cx="52" cy="46" r="8.5" stroke="white" stroke-width="2" fill="rgba(11,16,32,0.7)" opacity="0.9"/>
+            <circle cx="52" cy="46" r="5" fill="none" stroke="url(#tlg2)" stroke-width="2" opacity="0.95"/>
+            <line x1="58.5" y1="52.5" x2="63" y2="57" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+            <text x="52" y="49.5" text-anchor="middle" font-size="6" fill="white" font-weight="700" font-family="sans-serif" opacity="0.95">Q</text>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">Question Bank Management System</div>
+          <div class="brand-sub">Java · File Storage · DSA-Driven Engine</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="session-pill"><span class="live-dot"></span><span id="sessionLabel">admin · ADMIN</span></div>
+        <button class="topbar-btn" id="themeToggle">🌙 Theme</button>
+        <button class="topbar-btn" id="logoutBtn">Sign out</button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="glass stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-label">Total Questions</div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-trend" id="statTotalTrend">&nbsp;</div>
+      </div>
+      <div class="glass stat-card">
+        <div class="stat-icon">🗂</div>
+        <div class="stat-label">Subjects</div>
+        <div class="stat-value" id="statSubjects">0</div>
+        <div class="stat-trend" id="statSubjectsTrend">&nbsp;</div>
+      </div>
+      <div class="glass stat-card">
+        <div class="stat-icon">📄</div>
+        <div class="stat-label">Papers Generated</div>
+        <div class="stat-value" id="statPapers">0</div>
+        <div class="stat-trend" id="statPapersTrend">None yet</div>
+      </div>
+      <div class="glass stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-label">Usage Records</div>
+        <div class="stat-value" id="statUsage">0</div>
+        <div class="stat-trend">Live tracking</div>
+      </div>
+    </div>
+
+    <!-- NAV PILLS -->
+    <div class="glass nav-pills" id="navPills">
+      <div class="pill active" data-view="questions">📋 Questions</div>
+      <div class="pill" data-view="search">🔍 Search</div>
+      <div class="pill" data-view="paper">⚡ Generate Paper</div>
+      <div class="pill" data-view="usage">📈 Usage History</div>
+      <div class="pill" data-view="add">➕ Add Question</div>
+      <div class="pill" data-view="benchmark">🏎 Benchmark</div>
+      <div class="pill admin-only" data-view="users" style="display:none">👥 Users</div>
+    </div>
+
+    <!-- PANEL -->
+    <div class="glass panel">
+
+      <!-- ===== VIEW: ALL QUESTIONS ===== -->
+      <div class="view active" id="view-questions">
+        <div class="panel-title">All Questions</div>
+        <div class="panel-sub">Live in-memory state · 16 pre-seeded + any you add · sorted by ID</div>
+        <div class="flex-row" style="margin-bottom:16px;">
+          <input id="filterInput" placeholder="Filter by subject, unit, difficulty..." style="max-width:320px;"/>
+          <div class="custom-dropdown" data-select="filterDiff">
+            <button type="button" class="custom-dropdown-trigger">All difficulties</button>
+            <div class="custom-dropdown-menu"></div>
+          </div>
+          <select id="filterDiff" class="custom-dropdown-source">
+            <option value="">All difficulties</option>
+            <option>Easy</option><option>Medium</option><option>Hard</option>
+          </select>
+          <div class="custom-dropdown" data-select="filterSubjectQ">
+            <button type="button" class="custom-dropdown-trigger">All subjects</button>
+            <div class="custom-dropdown-menu"></div>
+          </div>
+          <select id="filterSubjectQ" class="custom-dropdown-source"><option value="">All subjects</option></select>
+        </div>
+        <div class="qlist" id="qlist"></div>
+      </div>
+
+      <!-- ===== VIEW: SEARCH ===== -->
+      <div class="view" id="view-search">
+        <div class="panel-title">Search Questions</div>
+        <div class="panel-sub">Pick a DSA algorithm, enter a query — matches show with algorithm performance stats</div>
+        <div class="algo-chips" id="algoChips">
+          <div class="chip on" data-algo="KMP">KMP &nbsp;<span style="opacity:.6;font-size:10px">O(n+m)</span></div>
+          <div class="chip" data-algo="Naive">Naive &nbsp;<span style="opacity:.6;font-size:10px">O(n·m)</span></div>
+          <div class="chip" data-algo="Z-Function">Z-Function &nbsp;<span style="opacity:.6;font-size:10px">O(n+m)</span></div>
+          <div class="chip" data-algo="Rabin-Karp">Rabin-Karp &nbsp;<span style="opacity:.6;font-size:10px">O(n+m) avg</span></div>
+          <div class="chip" data-algo="Aho-Corasick">Aho-Corasick &nbsp;<span style="opacity:.6;font-size:10px">multi-keyword</span></div>
+          <div class="chip" data-algo="Fuzzy">Fuzzy / Edit Distance &nbsp;<span style="opacity:.6;font-size:10px">typo-tolerant</span></div>
+        </div>
+        <div class="search-bar">
+          <input id="searchInput" placeholder="e.g.  stack   or   scheduling os   or   schedulng (fuzzy)"/>
+          <button class="btn btn-primary" id="searchBtn">Search →</button>
+        </div>
+        <div class="search-meta" id="searchMeta"></div>
+        <div class="qlist" id="searchResults"><div class="empty-note">Select an algorithm and enter a query above.</div></div>
+      </div>
+
+      <!-- ===== VIEW: GENERATE PAPER ===== -->
+      <div class="view" id="view-paper">
+        <div class="panel-title">Generate Question Paper</div>
+        <div class="panel-sub">Constraints → 0/1 Knapsack DP selects optimal question set · overused questions penalised</div>
+        <div class="paper-form">
+          <div class="field"><label>Subject</label>
+            <div class="custom-dropdown" data-select="paperSubject">
+              <button type="button" class="custom-dropdown-trigger">All subjects</button>
+              <div class="custom-dropdown-menu"></div>
+            </div>
+            <select id="paperSubject" class="custom-dropdown-source"><option value="">All subjects</option></select>
+          </div>
+          <div class="field"><label>Questions</label><input type="number" id="paperCount" value="6" min="1"/></div>
+          <div class="field"><label>Target total marks</label><input type="number" id="paperMarks" value="40" min="1"/></div>
+        </div>
+        <div class="inline-error" id="paperError">Could not find an exact fit — showing the best feasible set.</div>
+        <div class="flex-row">
+          <button class="btn btn-primary" id="genBtn">⚡ Generate Paper</button>
+          <button class="btn" id="exportBtn" style="display:none">⬇ Export .txt</button>
+        </div>
+        <div id="paperResultWrap"></div>
+      </div>
+
+      <!-- ===== VIEW: USAGE HISTORY ===== -->
+      <div class="view" id="view-usage">
+        <div class="panel-title">Usage History</div>
+        <div class="panel-sub">Appended every time a question enters a generated paper · top questions sorted by use count</div>
+        <div id="usageContent"></div>
+      </div>
+
+      <!-- ===== VIEW: ADD QUESTION ===== -->
+      <div class="view" id="view-add">
+        <div class="panel-title">Add Question</div>
+        <div class="panel-sub">Auto-generates next sequential ID (Q017, Q018…)</div>
+        <div class="field-row">
+          <div class="field"><label>Subject</label><input id="addSubject" placeholder="Data Structures"/></div>
+          <div class="field"><label>Unit</label><input id="addUnit" placeholder="Unit 3"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Difficulty</label>
+            <select id="addDifficulty"><option>Easy</option><option selected>Medium</option><option>Hard</option></select>
+          </div>
+          <div class="field"><label>Marks</label><input type="number" id="addMarks" placeholder="10" min="1"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Course Outcome</label><input id="addCo" placeholder="CO3"/></div>
+          <div class="field"><label>Tags (space-separated)</label><input id="addTags" placeholder="stack array"/></div>
+        </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label>Question Text</label>
+          <textarea id="addText" placeholder="Explain the working of..."></textarea>
+        </div>
+        <div class="inline-error" id="addError">Please fill in Subject, Question Text, and a valid Marks value.</div>
+        <div class="inline-success" id="addSuccess"></div>
+        <button class="btn btn-primary" id="addBtn">💾 Save Question</button>
+      </div>
+
+      <!-- ===== VIEW: BENCHMARK ===== -->
+      <div class="view" id="view-benchmark">
+        <div class="panel-title">Algorithm Benchmark</div>
+        <div class="panel-sub">Runs all 6 search algorithms on the same query simultaneously and compares performance</div>
+        <div class="search-bar">
+          <input id="benchInput" placeholder="Enter query to benchmark all algorithms at once…"/>
+          <button class="btn btn-primary" id="benchBtn">🏎 Run All</button>
+        </div>
+        <div id="benchResults"></div>
+      </div>
+
+      <!-- ===== VIEW: USERS (Admin) ===== -->
+      <div class="view" id="view-users">
+        <div class="panel-title">User Management <span style="font-size:12px;color:var(--text-low);font-weight:400">— Admin only</span></div>
+        <div class="panel-sub">Add Faculty or Admin accounts</div>
+        <div class="field-row">
+          <div class="field"><label>Username</label><input id="newUsername" placeholder="faculty2"/></div>
+          <div class="field"><label>Password</label><input id="newPassword" type="password" placeholder="••••••••"/></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Role</label>
+            <select id="newRole"><option value="FACULTY">Faculty</option><option value="ADMIN">Admin</option></select>
+          </div>
+          <div class="field" style="justify-content:flex-end;">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" id="addUserBtn" style="align-self:flex-start;margin-top:4px;">Add User</button>
+          </div>
+        </div>
+        <div class="inline-error" id="userError"></div>
+        <div class="inline-success" id="userSuccess"></div>
+        <div class="divider"></div>
+        <div class="panel-sub">Current accounts</div>
+        <div id="userList"></div>
+      </div>
+
+    </div><!-- end panel -->
+
+    <div class="footer-note">
+      Question Bank Management System · Java Backend + HTML5 Frontend ·
+      DSA Algorithms: KMP · Z-Function · Rabin-Karp · Aho-Corasick · Edit Distance · 0/1 Knapsack DP
+    </div>
+  </div>
+</div>
+
+<!-- ===== EDIT MODAL ===== -->
+<div class="modal-overlay" id="editModal">
+  <div class="glass modal-card">
+    <div class="modal-title">Edit Question</div>
+    <input type="hidden" id="editId"/>
+    <div class="field-row">
+      <div class="field"><label>Subject</label><input id="editSubject"/></div>
+      <div class="field"><label>Unit</label><input id="editUnit"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Difficulty</label>
+        <select id="editDifficulty"><option>Easy</option><option>Medium</option><option>Hard</option></select>
+      </div>
+      <div class="field"><label>Marks</label><input type="number" id="editMarks" min="1"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>CO</label><input id="editCo"/></div>
+      <div class="field"><label>Tags</label><input id="editTags"/></div>
+    </div>
+    <div class="field" style="margin-bottom:4px;"><label>Question Text</label><textarea id="editText"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" id="editCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="editSaveBtn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="glass modal-card">
+    <div class="modal-title">Delete Question</div>
+    <div class="modal-text">Are you sure you want to delete <strong id="deleteQuestionLabel">this question</strong>? This action cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn" id="deleteCancelBtn">Cancel</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+//  DATA & STATE
+// =====================================================================
+const accounts = [
+  { username: "admin",    password: "admin123",   role: "ADMIN" },
+  { username: "faculty1", password: "faculty123", role: "FACULTY" }
+];
+let currentUser = null;
+
+let questions = [
+  { id:"Q001", subject:"Data Structures",   unit:"Unit 3", diff:"medium", co:"CO3", marks:10, text:"Explain the working of a stack using array implementation.", tags:["stack","array"] },
+  { id:"Q002", subject:"Operating Systems", unit:"Unit 2", diff:"hard",   co:"CO2", marks:10, text:"Describe CPU scheduling algorithms and compare FCFS with SJF.", tags:["scheduling","os","cpu"] },
+  { id:"Q003", subject:"Data Structures",   unit:"Unit 1", diff:"easy",   co:"CO1", marks:5,  text:"Define a queue and list its real-world applications.", tags:["queue"] },
+  { id:"Q004", subject:"Database Systems",  unit:"Unit 2", diff:"medium", co:"CO2", marks:8,  text:"What is normalization? Explain 1NF, 2NF and 3NF with examples.", tags:["normalization","database"] },
+  { id:"Q005", subject:"Computer Networks", unit:"Unit 4", diff:"hard",   co:"CO4", marks:10, text:"Explain the TCP three-way handshake with a diagram.", tags:["tcp","networking"] },
+  { id:"Q006", subject:"Algorithms",        unit:"Unit 3", diff:"medium", co:"CO3", marks:10, text:"Trace Dijkstra's algorithm on a weighted graph of your choice.", tags:["graph","shortest-path","dijkstra"] },
+  { id:"Q007", subject:"Operating Systems", unit:"Unit 2", diff:"medium", co:"CO2", marks:8,  text:"Compare CPU scheduling algorithms with respect to average waiting time.", tags:["scheduling","os"] },
+  { id:"Q008", subject:"Data Structures",   unit:"Unit 4", diff:"hard",   co:"CO4", marks:10, text:"Explain AVL tree rotations with a suitable example.", tags:["tree","avl"] },
+  { id:"Q009", subject:"Database Systems",  unit:"Unit 3", diff:"hard",   co:"CO3", marks:10, text:"Explain ACID properties of a transaction with examples.", tags:["transactions","database"] },
+  { id:"Q010", subject:"Computer Networks", unit:"Unit 1", diff:"easy",   co:"CO1", marks:5,  text:"Differentiate between the OSI and TCP/IP reference models.", tags:["osi","networking"] },
+  { id:"Q011", subject:"Algorithms",        unit:"Unit 2", diff:"easy",   co:"CO2", marks:5,  text:"Explain the divide and conquer paradigm with merge sort as an example.", tags:["sorting","divide-conquer"] },
+  { id:"Q012", subject:"Data Structures",   unit:"Unit 3", diff:"medium", co:"CO3", marks:10, text:"Explain how a stack can be implemented using a linked list.", tags:["stack","linked-list"] },
+  { id:"Q013", subject:"Operating Systems", unit:"Unit 3", diff:"hard",   co:"CO3", marks:10, text:"Explain deadlock avoidance using Banker's algorithm.", tags:["deadlock","os"] },
+  { id:"Q014", subject:"Algorithms",        unit:"Unit 4", diff:"hard",   co:"CO4", marks:10, text:"Explain the 0/1 Knapsack problem and solve it using dynamic programming.", tags:["knapsack","dp"] },
+  { id:"Q015", subject:"Database Systems",  unit:"Unit 1", diff:"easy",   co:"CO1", marks:5,  text:"Define primary key, foreign key, and candidate key with examples.", tags:["keys","database"] },
+  { id:"Q016", subject:"Computer Networks", unit:"Unit 3", diff:"medium", co:"CO3", marks:8,  text:"Explain the sliding window protocol used for flow control.", tags:["flow-control","networking"] },
+  { id:"Q017", subject:"Data Structures", unit:"Unit 1", diff:"easy", co:"CO1", marks:5, text:"Compare arrays and linked lists based on memory and access time.", tags:["arrays","linked-list"] },
+  { id:"Q018", subject:"Data Structures", unit:"Unit 2", diff:"medium", co:"CO2", marks:8, text:"Demonstrate enqueue and dequeue operations in a circular queue.", tags:["queue","circular-queue"] },
+  { id:"Q019", subject:"Data Structures", unit:"Unit 4", diff:"hard", co:"CO4", marks:10, text:"Construct a binary search tree and analyze its traversal orders.", tags:["bst","tree","traversal"] },
+  { id:"Q020", subject:"Data Structures", unit:"Unit 5", diff:"medium", co:"CO5", marks:8, text:"Explain hashing and resolve collisions using separate chaining.", tags:["hashing","collision"] },
+  { id:"Q021", subject:"Data Structures", unit:"Unit 5", diff:"hard", co:"CO6", marks:10, text:"Analyze the time complexity of heap sort and build-heap operations.", tags:["heap","heap-sort"] },
+  { id:"Q022", subject:"Data Structures", unit:"Unit 2", diff:"medium", co:"CO2", marks:8, text:"Convert an infix expression to postfix using a stack.", tags:["stack","expression"] },
+  { id:"Q023", subject:"Data Structures", unit:"Unit 6", diff:"hard", co:"CO6", marks:10, text:"Implement breadth-first and depth-first traversal for a graph.", tags:["graph","bfs","dfs"] },
+  { id:"Q024", subject:"Data Structures", unit:"Unit 6", diff:"medium", co:"CO5", marks:8, text:"Explain union-find operations and their use in connectivity problems.", tags:["disjoint-set","union-find"] },
+  { id:"Q025", subject:"Algorithms", unit:"Unit 1", diff:"easy", co:"CO1", marks:5, text:"State the properties of an algorithm and explain input and output specifications.", tags:["algorithm","analysis"] },
+  { id:"Q026", subject:"Algorithms", unit:"Unit 2", diff:"medium", co:"CO2", marks:8, text:"Apply binary search to a sorted array and derive its complexity.", tags:["searching","binary-search"] },
+  { id:"Q027", subject:"Algorithms", unit:"Unit 3", diff:"hard", co:"CO4", marks:10, text:"Use Kruskal's algorithm to construct a minimum spanning tree.", tags:["graph","mst","kruskal"] },
+  { id:"Q028", subject:"Algorithms", unit:"Unit 3", diff:"medium", co:"CO3", marks:8, text:"Compare adjacency matrix and adjacency list graph representations.", tags:["graph","representation"] },
+  { id:"Q029", subject:"Algorithms", unit:"Unit 4", diff:"hard", co:"CO5", marks:10, text:"Solve the longest common subsequence problem using dynamic programming.", tags:["dynamic-programming","lcs"] },
+  { id:"Q030", subject:"Algorithms", unit:"Unit 5", diff:"medium", co:"CO6", marks:8, text:"Explain backtracking with the N-Queens problem.", tags:["backtracking","n-queens"] },
+  { id:"Q031", subject:"Algorithms", unit:"Unit 5", diff:"hard", co:"CO4", marks:10, text:"Analyze quicksort partitioning and its best, average, and worst cases.", tags:["sorting","quicksort"] },
+  { id:"Q032", subject:"Algorithms", unit:"Unit 6", diff:"medium", co:"CO5", marks:8, text:"Describe the greedy strategy and solve the fractional knapsack problem.", tags:["greedy","knapsack"] },
+  { id:"Q033", subject:"Operating Systems", unit:"Unit 1", diff:"easy", co:"CO1", marks:5, text:"Explain the main services provided by an operating system.", tags:["os-services","kernel"] },
+  { id:"Q034", subject:"Operating Systems", unit:"Unit 2", diff:"medium", co:"CO2", marks:8, text:"Describe process states and draw a process state transition diagram.", tags:["process","state"] },
+  { id:"Q035", subject:"Operating Systems", unit:"Unit 3", diff:"hard", co:"CO4", marks:10, text:"Compare paging and segmentation for memory management.", tags:["memory","paging","segmentation"] },
+  { id:"Q036", subject:"Operating Systems", unit:"Unit 4", diff:"medium", co:"CO3", marks:8, text:"Explain page replacement using FIFO and LRU algorithms.", tags:["virtual-memory","page-replacement"] },
+  { id:"Q037", subject:"Operating Systems", unit:"Unit 4", diff:"hard", co:"CO5", marks:10, text:"Calculate effective access time for a system with a TLB.", tags:["tlb","memory"] },
+  { id:"Q038", subject:"Operating Systems", unit:"Unit 5", diff:"medium", co:"CO6", marks:8, text:"Explain file allocation methods and compare their advantages.", tags:["file-system","allocation"] },
+  { id:"Q039", subject:"Operating Systems", unit:"Unit 5", diff:"hard", co:"CO4", marks:10, text:"Describe disk scheduling using SSTF and SCAN with an example.", tags:["disk","scheduling"] },
+  { id:"Q040", subject:"Operating Systems", unit:"Unit 6", diff:"medium", co:"CO5", marks:8, text:"Explain protection domains and access control in operating systems.", tags:["security","protection"] },
+  { id:"Q041", subject:"Database Systems", unit:"Unit 1", diff:"easy", co:"CO1", marks:5, text:"Describe the three-schema architecture of a database system.", tags:["architecture","schema"] },
+  { id:"Q042", subject:"Database Systems", unit:"Unit 2", diff:"medium", co:"CO2", marks:8, text:"Write relational algebra expressions for selection, projection, and join.", tags:["relational-algebra","query"] },
+  { id:"Q043", subject:"Database Systems", unit:"Unit 3", diff:"hard", co:"CO4", marks:10, text:"Explain conflict serializability with a precedence graph.", tags:["transactions","serializability"] },
+  { id:"Q044", subject:"Database Systems", unit:"Unit 4", diff:"medium", co:"CO3", marks:8, text:"Compare clustered and non-clustered database indexes.", tags:["indexing","b-tree"] },
+  { id:"Q045", subject:"Database Systems", unit:"Unit 4", diff:"hard", co:"CO5", marks:10, text:"Explain B+ tree insertion and deletion operations.", tags:["b-plus-tree","indexing"] },
+  { id:"Q046", subject:"Database Systems", unit:"Unit 5", diff:"medium", co:"CO6", marks:8, text:"Describe SQL views, triggers, and stored procedures.", tags:["sql","views","triggers"] },
+  { id:"Q047", subject:"Database Systems", unit:"Unit 5", diff:"hard", co:"CO4", marks:10, text:"Explain distributed database fragmentation and replication.", tags:["distributed-database","replication"] },
+  { id:"Q048", subject:"Database Systems", unit:"Unit 6", diff:"medium", co:"CO5", marks:8, text:"Compare OLTP and OLAP systems with suitable examples.", tags:["oltp","olap"] },
+  { id:"Q049", subject:"Computer Networks", unit:"Unit 1", diff:"easy", co:"CO1", marks:5, text:"Explain the functions of the physical and data link layers.", tags:["layers","osi"] },
+  { id:"Q050", subject:"Computer Networks", unit:"Unit 2", diff:"medium", co:"CO2", marks:8, text:"Describe IPv4 addressing and subnet mask calculation.", tags:["ip","subnetting"] },
+  { id:"Q051", subject:"Computer Networks", unit:"Unit 3", diff:"hard", co:"CO4", marks:10, text:"Compare distance vector and link state routing protocols.", tags:["routing","distance-vector"] },
+  { id:"Q052", subject:"Computer Networks", unit:"Unit 4", diff:"medium", co:"CO3", marks:8, text:"Explain UDP and TCP differences for application workloads.", tags:["tcp","udp","transport"] },
+  { id:"Q053", subject:"Computer Networks", unit:"Unit 5", diff:"hard", co:"CO5", marks:10, text:"Describe DNS resolution and the role of authoritative servers.", tags:["dns","application-layer"] },
+  { id:"Q054", subject:"Computer Networks", unit:"Unit 5", diff:"medium", co:"CO6", marks:8, text:"Explain HTTP request methods, status codes, and persistent connections.", tags:["http","web"] },
+  { id:"Q055", subject:"Computer Networks", unit:"Unit 6", diff:"hard", co:"CO4", marks:10, text:"Analyze symmetric and asymmetric encryption in network security.", tags:["security","encryption"] },
+  { id:"Q056", subject:"Computer Networks", unit:"Unit 6", diff:"medium", co:"CO5", marks:8, text:"Explain firewalls, intrusion detection, and secure network zones.", tags:["firewall","ids","security"] },
+];
+
+let papers = [];
+let usageHistory = [];
+let nextQNum = 57;
+let nextPaperNum = 1;
+
+function genQId() { return "Q" + String(nextQNum++).padStart(3,"0"); }
+function genPId()  { return "P" + String(nextPaperNum++).padStart(3,"0"); }
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function usageCountFor(qid) {
+  return usageHistory.filter(u=>u.qid===qid).reduce((s,u)=>s+u.count,0);
+}
+
+// =====================================================================
+//  DSA ALGORITHMS (JavaScript mirror of Java backend)
+// =====================================================================
+
+// ---- KMP ----
+function kmpBuildFailure(p) {
+  const m=p.length; const fail=new Array(m).fill(0); let k=0;
+  for(let i=1;i<m;i++){
+    while(k>0&&p[i]!==p[k]) k=fail[k-1];
+    if(p[i]===p[k]) k++;
+    fail[i]=k;
+  } return fail;
+}
+function kmpSearch(text, pat) {
+  let comps=0;
+  const t=text.toLowerCase(), p=pat.toLowerCase();
+  const n=t.length, m=p.length; if(!m) return {found:true,comps:0};
+  const fail=kmpBuildFailure(p); let j=0;
+  for(let i=0;i<n;i++){
+    comps++;
+    while(j>0&&t[i]!==p[j]){j=fail[j-1];comps++;}
+    if(t[i]===p[j]) j++;
+    if(j===m) return {found:true,comps};
+  } return {found:false,comps};
+}
+
+// ---- Naive ----
+function naiveSearch(text, pat) {
+  let comps=0;
+  const t=text.toLowerCase(), p=pat.toLowerCase();
+  const n=t.length, m=p.length;
+  for(let i=0;i<=n-m;i++){
+    let j=0;
+    while(j<m){comps++;if(t[i+j]!==p[j]) break;j++;}
+    if(j===m) return {found:true,comps};
+  } return {found:false,comps};
+}
+
+// ---- Z-Function ----
+function zSearch(text, pat) {
+  let comps=0;
+  const t=text.toLowerCase(), p=pat.toLowerCase();
+  const m=p.length; if(!m) return {found:true,comps:0};
+  const s=p+"$"+t; const n=s.length; const z=new Array(n).fill(0);
+  let l=0,r=0;
+  for(let i=1;i<n;i++){
+    if(i<r) z[i]=Math.min(r-i,z[i-l]);
+    while(i+z[i]<n){comps++;if(s[z[i]]===s[i+z[i]]) z[i]++;else break;}
+    if(i+z[i]>r){l=i;r=i+z[i];}
+    if(z[i]===m) return {found:true,comps};
+  } return {found:false,comps};
+}
+
+// ---- Rabin-Karp ----
+function rabinKarpSearch(text, pat) {
+  let comps=0;
+  const t=text.toLowerCase(), p=pat.toLowerCase();
+  const n=t.length, m=p.length, BASE=31, MOD=1000000007n;
+  if(m>n) return {found:false,comps:0};
+  let power=1n;
+  for(let i=0;i<m-1;i++) power=power*BigInt(BASE)%MOD;
+  let ph=0n, wh=0n;
+  for(let i=0;i<m;i++){
+    ph=(ph*BigInt(BASE)+BigInt(p.charCodeAt(i)-96))%MOD;
+    wh=(wh*BigInt(BASE)+BigInt(t.charCodeAt(i)-96))%MOD;
+  }
+  for(let i=0;i<=n-m;i++){
+    comps++;
+    if(ph===wh){
+      let ok=true;
+      for(let j=0;j<m;j++){comps++;if(t[i+j]!==p[j]){ok=false;break;}}
+      if(ok) return {found:true,comps};
+    }
+    if(i<n-m){
+      wh=(BigInt(BASE)*(wh-BigInt(t.charCodeAt(i)-96)*power%MOD+MOD)%MOD+BigInt(t.charCodeAt(i+m)-96))%MOD;
+    }
+  } return {found:false,comps};
+}
+
+// ---- Aho-Corasick ----
+function ahoCorasickSearch(text, keywords) {
+  // Build trie
+  const trie=[{ch:{},fail:0,end:false}]; let comps=0;
+  for(const kw of keywords){
+    let cur=0;
+    for(const c of kw.toLowerCase()){
+      if(!trie[cur].ch[c]){trie[cur].ch[c]=trie.length;trie.push({ch:{},fail:0,end:false});}
+      cur=trie[cur].ch[c];
+    } trie[cur].end=true;
+  }
+  // BFS fail links
+  const q=[]; const root=trie[0];
+  for(const c in root.ch){trie[root.ch[c]].fail=0;q.push(root.ch[c]);}
+  while(q.length){
+    const u=q.shift();
+    for(const c in trie[u].ch){
+      const v=trie[u].ch[c];
+      let f=trie[u].fail;
+      while(f!==0&&!trie[f].ch[c]) f=trie[f].fail;
+      trie[v].fail=trie[f].ch[c]===v?0:(trie[f].ch[c]||0);
+      q.push(v);
+    }
+  }
+  // Search
+  let cur=0; const found=new Set();
+  for(const ch of text.toLowerCase()){
+    while(cur!==0&&!trie[cur].ch[ch]) cur=trie[cur].fail;
+    cur=trie[cur].ch[ch]||0; comps++;
+    let tmp=cur;
+    while(tmp){if(trie[tmp].end) found.add(tmp);tmp=trie[tmp].fail;comps++;}
+  }
+  return {found:found.size>0,comps,hits:found.size};
+}
+
+// ---- Edit Distance (Fuzzy) ----
+function editDistance(a, b) {
+  let comps=0; a=a.toLowerCase();b=b.toLowerCase();
+  const m=a.length,n=b.length;
+  let prev=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){
+    const curr=[i];
+    for(let j=1;j<=n;j++){comps++;curr.push(a[i-1]===b[j-1]?prev[j-1]:1+Math.min(prev[j-1],prev[j],curr[j-1]));}
+    prev=curr;
+  } return {dist:prev[n],comps};
+}
+function fuzzySearch(text, query, threshold=2) {
+  const words=text.toLowerCase().split(/\s+/);
+  let bestDist=Infinity, totalComps=0;
+  for(const w of words){const r=editDistance(query,w.replace(/[^a-z]/g,""));totalComps+=r.comps;if(r.dist<bestDist)bestDist=r.dist;}
+  return {found:bestDist<=threshold,comps:totalComps,dist:bestDist};
+}
+
+// ---- Run one algorithm on all questions ----
+function runAlgoOnAll(algo, query) {
+  let totalComps=0; const matched=[];
+  const keywords=query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const t0=performance.now();
+  for(const q of questions){
+    const hay=(q.text+" "+q.tags.join(" ")+" "+q.subject+" "+q.unit).toLowerCase();
+    let res;
+    switch(algo){
+      case "KMP":         res=kmpSearch(hay,query);         break;
+      case "Naive":       res=naiveSearch(hay,query);       break;
+      case "Z-Function":  res=zSearch(hay,query);           break;
+      case "Rabin-Karp":  res=rabinKarpSearch(hay,query);   break;
+      case "Aho-Corasick":res=ahoCorasickSearch(hay,keywords);break;
+      case "Fuzzy":       res=fuzzySearch(hay,query,2);     break;
+      default:            res={found:false,comps:0};
+    }
+    totalComps+=res.comps;
+    if(res.found) matched.push({q, extra:res});
+  }
+  const elapsed=(performance.now()-t0).toFixed(3);
+  return {matched, comps:totalComps, elapsed};
+}
+
+// ---- 0/1 Knapsack DP Paper Generation ----
+function knapsackGenerate(pool, count, targetMarks) {
+  const n=pool.length; const W=targetMarks;
+  if(!n||W<=0) return [];
+  // dp[w] = max questions using total marks ≤ w
+  const dp=new Array(W+1).fill(0);
+  const choice=Array.from({length:n+1},()=>new Array(W+1).fill(0));
+  for(let i=1;i<=n;i++){
+    const wi=pool[i-1].marks;
+    for(let w=W;w>=wi;w--){
+      if(dp[w-wi]+1>dp[w]&&dp[w-wi]+1<=count){dp[w]=dp[w-wi]+1;choice[i][w]=1;}
+    }
+  }
+  let bestW=0,bestC=0;
+  for(let w=0;w<=W;w++) if(dp[w]>bestC){bestC=dp[w];bestW=w;}
+  const selected=[];
+  let w=bestW;
+  for(let i=n;i>=1&&w>0;i--){
+    if(choice[i][w]===1){selected.push(pool[i-1]);w-=pool[i-1].marks;}
+  }
+  // Greedy fill if needed
+  if(selected.length<count){
+    for(const q of pool){
+      if(selected.length>=count) break;
+      if(!selected.find(s=>s.id===q.id)) selected.push(q);
+    }
+  }
+  return selected;
+}
+
+// =====================================================================
+//  AUTH
+// =====================================================================
+const loginScreen=document.getElementById("loginScreen");
+const appScreen=document.getElementById("appScreen");
+const loginError=document.getElementById("loginError");
+
+function activateView(viewName){
+  const target = document.getElementById("view-" + viewName);
+  if (!target) return;
+  document.querySelectorAll(".pill").forEach(p=>p.classList.toggle("active", p.dataset.view===viewName));
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active", v.id === "view-" + viewName));
+}
+
+function attemptLogin(){
+  const u=document.getElementById("loginUser").value.trim();
+  const p=document.getElementById("loginPass").value;
+  const match=accounts.find(a=>a.username===u&&a.password===p);
+  if(!match){
+    loginError.classList.remove("show");void loginError.offsetWidth;loginError.classList.add("show");
+    document.getElementById("loginPass").value="";return;
+  }
+  currentUser=match;loginError.classList.remove("show");
+  document.getElementById("sessionLabel").textContent=match.username+" · "+match.role;
+  loginScreen.style.display="none";appScreen.classList.add("show");
+  document.querySelectorAll(".admin-only").forEach(el=>el.style.display=match.role==="ADMIN"?"":"none");
+  activateView("questions");
+  initApp();
+}
+
+document.getElementById("loginBtn").addEventListener("click",attemptLogin);
+document.getElementById("loginPass").addEventListener("keydown",e=>{if(e.key==="Enter")attemptLogin();});
+document.getElementById("loginUser").addEventListener("keydown",e=>{if(e.key==="Enter")attemptLogin();});
+document.getElementById("logoutBtn").addEventListener("click",()=>{
+  currentUser=null;appScreen.classList.remove("show");loginScreen.style.display="flex";
+  document.getElementById("loginUser").value="";document.getElementById("loginPass").value="";
+  document.getElementById("loginUser").focus();
+});
+
+// =====================================================================
+//  HELPERS
+// =====================================================================
+function diffClass(d){return "diff-"+d.toLowerCase();}
+function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();}
+
+function questionCardHtml(q, extra="", showActions=true){
+  const actions=showActions?`<div class="qactions">
+    <button class="btn btn-sm" onclick="openEdit('${q.id}')" title="Edit">✏️</button>
+    <button class="btn btn-sm btn-danger" onclick="openDelete('${q.id}')" title="Delete">🗑</button>
+  </div>`:"";
+  return `<div class="qcard" id="card-${q.id}">
+    <div class="qtop">
+      <div>
+        <span class="qid">${q.id}</span>
+        <div class="qtext">${q.text}</div>
+      </div>
+      ${actions}
+    </div>
+    <div class="qmeta">
+      <span class="tag">${q.subject}</span>
+      <span class="tag">${q.unit}</span>
+      <span class="tag ${diffClass(q.diff)}">${capitalize(q.diff)}</span>
+      <span class="tag">${q.co}</span>
+      <span class="tag">${q.marks} marks</span>
+      ${q.tags.map(t=>`<span class="tag">#${t}</span>`).join("")}
+      ${extra}
+    </div>
+  </div>`;
+}
+
+function renderQuestions(container, list, extraFn=null, showActions=true){
+  if(!list.length){container.innerHTML=`<div class="empty-note">No questions to show.</div>`;return;}
+  container.innerHTML=list.map((q,i)=>`<div style="animation:rise 0.4s cubic-bezier(.2,.8,.2,1) ${i*0.03}s both">${questionCardHtml(q,extraFn?extraFn(q):"",showActions)}</div>`).join("");
+}
+
+function refreshStats(){
+  document.getElementById("statTotal").textContent=questions.length;
+  const subjects=new Set(questions.map(q=>q.subject));
+  document.getElementById("statSubjects").textContent=subjects.size;
+  document.getElementById("statSubjectsTrend").textContent=[...subjects].slice(0,3).join(" · ")+(subjects.size>3?" …":"");
+  document.getElementById("statPapers").textContent=papers.length;
+  document.getElementById("statPapersTrend").textContent=papers.length?"Last: "+papers[papers.length-1].id:"None yet";
+  document.getElementById("statUsage").textContent=usageHistory.length;
+}
+
+function refreshSubjectDropdowns(){
+  const subjects=[...new Set(questions.map(q=>q.subject))].sort();
+  const opts=`<option value="">All subjects</option>`+subjects.map(s=>`<option value="${s}">${s}</option>`).join("");
+  document.getElementById("paperSubject").innerHTML=opts;
+  const fq=document.getElementById("filterSubjectQ");
+  if(fq) fq.innerHTML=opts;
+  refreshCustomDropdown("paperSubject");
+  refreshCustomDropdown("filterSubjectQ");
+}
+
+function refreshCustomDropdown(selectId){
+  const select=document.getElementById(selectId);
+  const dropdown=document.querySelector(`.custom-dropdown[data-select="${selectId}"]`);
+  if(!select||!dropdown) return;
+  const trigger=dropdown.querySelector(".custom-dropdown-trigger");
+  const menu=dropdown.querySelector(".custom-dropdown-menu");
+  trigger.textContent=select.options[select.selectedIndex]?.text||"Select an option";
+  menu.innerHTML=[...select.options].map(option=>
+    `<button type="button" class="custom-dropdown-option${option.value===select.value?" selected":""}" data-value="${option.value}">${option.text}</button>`
+  ).join("");
+  menu.querySelectorAll(".custom-dropdown-option").forEach(option=>option.addEventListener("click",()=>{
+    select.value=option.dataset.value;
+    select.dispatchEvent(new Event("input",{bubbles:true}));
+    select.dispatchEvent(new Event("change",{bubbles:true}));
+    refreshCustomDropdown(selectId);
+    dropdown.classList.remove("open");
+  }));
+}
+
+document.querySelectorAll(".custom-dropdown").forEach(dropdown=>{
+  const selectId=dropdown.dataset.select;
+  dropdown.querySelector(".custom-dropdown-trigger").addEventListener("click",event=>{
+    event.stopPropagation();
+    document.querySelectorAll(".custom-dropdown.open").forEach(other=>{if(other!==dropdown) other.classList.remove("open");});
+    dropdown.classList.toggle("open");
+  });
+  refreshCustomDropdown(selectId);
+});
+document.addEventListener("click",()=>document.querySelectorAll(".custom-dropdown.open").forEach(dropdown=>dropdown.classList.remove("open")));
+
+function renderUsage(){
+  const el=document.getElementById("usageContent");
+  if(!usageHistory.length){el.innerHTML=`<div class="empty-note">No papers generated yet — usage history appears here after you generate a paper.</div>`;return;}
+  // aggregate per question
+  const map={};
+  usageHistory.forEach(u=>{map[u.qid]=(map[u.qid]||0)+u.count;});
+  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const maxCount=sorted[0][1]||1;
+  let html=`<table class="usage-table"><thead><tr><th>ID</th><th>Question</th><th>Subject</th><th>Times Used</th><th>Usage</th></tr></thead><tbody>`;
+  sorted.forEach(([qid,cnt],i)=>{
+    const q=questions.find(x=>x.id===qid);
+    const txt=q?q.text.substring(0,60)+(q.text.length>60?"…":""):"(removed)";
+    const subj=q?q.subject:"-";
+    const barW=Math.max(6,Math.round(cnt/maxCount*100));
+    html+=`<tr style="animation:rise 0.4s cubic-bezier(.2,.8,.2,1) ${i*0.04}s both">
+      <td><span class="qid">${qid}</span></td>
+      <td>${txt}</td>
+      <td>${subj}</td>
+      <td><span class="usage-count-badge">×${cnt}</span></td>
+      <td><div class="bench-bar-wrap" style="width:100px"><div class="bench-bar" style="width:${barW}%"></div></div></td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  el.innerHTML=html;
+}
+
+function renderUserList(){
+  const el=document.getElementById("userList");
+  if(!el) return;
+  el.innerHTML=accounts.map(a=>`<div class="usage-row"><span>${a.username}</span><span class="tag">${a.role}</span></div>`).join("");
+}
+
+// =====================================================================
+//  INIT
+// =====================================================================
+function initApp(){
+  renderFilteredQuestions();
+  refreshStats();
+  refreshSubjectDropdowns();
+  renderUsage();
+  renderUserList();
+  document.getElementById("searchResults").innerHTML=`<div class="empty-note">Select an algorithm and enter a query above.</div>`;
+}
+
+// =====================================================================
+//  NAV TABS
+// =====================================================================
+document.querySelectorAll(".pill").forEach(pill=>{
+  pill.addEventListener("click",()=>{
+    activateView(pill.dataset.view);
+  });
+});
+
+document.querySelectorAll(".chip").forEach(chip=>{
+  chip.addEventListener("click",()=>{
+    document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+    chip.classList.add("on");
+  });
+});
+
+// =====================================================================
+//  QUESTIONS VIEW: FILTER
+// =====================================================================
+function renderFilteredQuestions(){
+  const q=(document.getElementById("filterInput")||{}).value||"";
+  const d=(document.getElementById("filterDiff")||{}).value||"";
+  const s=(document.getElementById("filterSubjectQ")||{}).value||"";
+  let list=questions.slice();
+  if(q) list=list.filter(x=>x.text.toLowerCase().includes(q.toLowerCase())||x.subject.toLowerCase().includes(q.toLowerCase())||x.tags.join(" ").toLowerCase().includes(q.toLowerCase()));
+  if(d) list=list.filter(x=>x.diff.toLowerCase()===d.toLowerCase());
+  if(s) list=list.filter(x=>x.subject===s);
+  renderQuestions(document.getElementById("qlist"),list,null,true);
+}
+["filterInput","filterDiff","filterSubjectQ"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener("input",renderFilteredQuestions);
+});
+
+// =====================================================================
+//  SEARCH
+// =====================================================================
+function runSearch(){
+  const raw=document.getElementById("searchInput").value.trim();
+  const resultsEl=document.getElementById("searchResults");
+  const metaEl=document.getElementById("searchMeta");
+  const activeChip=document.querySelector(".chip.on");
+  const activeAlgo=activeChip ? activeChip.dataset.algo : "KMP";
+  if(!raw){
+    metaEl.innerHTML="";resultsEl.innerHTML=`<div class="empty-note">Enter a search term above to begin.</div>`;return;
+  }
+  const {matched,comps,elapsed}=runAlgoOnAll(activeAlgo,raw);
+  const algoComplex={
+    "KMP":"O(n+m)","Naive":"O(n·m)","Z-Function":"O(n+m)",
+    "Rabin-Karp":"O(n+m) avg","Aho-Corasick":"O(n+Σ|patterns|)","Fuzzy":"O(n·m) Levenshtein"
+  };
+  metaEl.innerHTML=`
+    <span class="meta-badge">🧮 ${activeAlgo}</span>
+    <span class="meta-badge">📐 ${algoComplex[activeAlgo]||""}</span>
+    <span class="meta-badge">✅ ${matched.length} match(es)</span>
+    <span class="meta-badge">⚡ ${elapsed} ms</span>
+    <span class="meta-badge">🔢 ${comps.toLocaleString()} comparisons</span>
+  `;
+  if(!matched.length){resultsEl.innerHTML=`<div class="empty-note">No matches found for "<strong>${raw}</strong>".</div>`;return;}
+  const extraFn=entry=>{
+    if(entry.extra&&entry.extra.dist!==undefined) return `<span class="tag match">edit dist ${entry.extra.dist}</span>`;
+    if(entry.extra&&entry.extra.hits!==undefined) return `<span class="tag match">${entry.extra.hits} keyword(s) hit</span>`;
+    return `<span class="tag match">matched</span>`;
+  };
+  resultsEl.innerHTML=matched.map((m,i)=>`<div style="animation:rise 0.4s cubic-bezier(.2,.8,.2,1) ${i*0.03}s both">${questionCardHtml(m.q,extraFn(m),false)}</div>`).join("");
+}
+
+document.getElementById("searchBtn").addEventListener("click",runSearch);
+document.getElementById("searchInput").addEventListener("keydown",e=>{if(e.key==="Enter")runSearch();});
+
+// =====================================================================
+//  ADD QUESTION
+// =====================================================================
+document.getElementById("addBtn").addEventListener("click",()=>{
+  const subject=document.getElementById("addSubject").value.trim();
+  const unit=document.getElementById("addUnit").value.trim()||"Unit 1";
+  const diff=document.getElementById("addDifficulty").value.toLowerCase();
+  const co=document.getElementById("addCo").value.trim()||"CO1";
+  const marksRaw=document.getElementById("addMarks").value.trim();
+  const text=document.getElementById("addText").value.trim();
+  const tagsRaw=document.getElementById("addTags").value.trim();
+  const errEl=document.getElementById("addError");
+  const okEl=document.getElementById("addSuccess");
+  const marks=parseInt(marksRaw,10);
+  if(!subject||!text||isNaN(marks)||marks<=0){errEl.classList.add("show");okEl.classList.remove("show");return;}
+  errEl.classList.remove("show");
+  const newQ={id:genQId(),subject,unit,diff,co,marks,text,tags:tagsRaw?tagsRaw.split(/\s+/).filter(Boolean):[]};
+  questions.push(newQ);
+  renderFilteredQuestions();refreshStats();refreshSubjectDropdowns();
+  ["addSubject","addUnit","addCo","addMarks","addText","addTags"].forEach(id=>document.getElementById(id).value="");
+  okEl.textContent=`✓ Saved as ${newQ.id}`;okEl.classList.add("show");
+  setTimeout(()=>okEl.classList.remove("show"),2500);
+});
+
+// =====================================================================
+//  DELETE QUESTION
+// =====================================================================
+function openDelete(id){
+  const q = questions.find(x => x.id === id);
+  if (!q) return;
+  document.getElementById("deleteQuestionLabel").textContent = `${q.id} — ${q.subject}`;
+  document.getElementById("deleteConfirmBtn").dataset.id = id;
+  document.getElementById("deleteModal").classList.add("open");
+}
+
+function deleteQ(id){
+  questions = questions.filter(q => q.id !== id);
+  renderFilteredQuestions();
+  refreshStats();
+  refreshSubjectDropdowns();
+  renderUsage();
+  document.getElementById("deleteModal").classList.remove("open");
+}
+
+document.getElementById("deleteCancelBtn").addEventListener("click", ()=> document.getElementById("deleteModal").classList.remove("open"));
+document.getElementById("deleteConfirmBtn").addEventListener("click", ()=> {
+  const id = document.getElementById("deleteConfirmBtn").dataset.id;
+  if (id) deleteQ(id);
+});
+document.getElementById("deleteModal").addEventListener("click", e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
+});
+
+// =====================================================================
+//  EDIT QUESTION
+// =====================================================================
+function openEdit(id){
+  const q=questions.find(x=>x.id===id);if(!q) return;
+  document.getElementById("editId").value=id;
+  document.getElementById("editSubject").value=q.subject;
+  document.getElementById("editUnit").value=q.unit;
+  document.getElementById("editDifficulty").value=capitalize(q.diff);
+  document.getElementById("editMarks").value=q.marks;
+  document.getElementById("editCo").value=q.co;
+  document.getElementById("editTags").value=q.tags.join(" ");
+  document.getElementById("editText").value=q.text;
+  document.getElementById("editModal").classList.add("open");
+}
+document.getElementById("editCancelBtn").addEventListener("click",()=>document.getElementById("editModal").classList.remove("open"));
+document.getElementById("editSaveBtn").addEventListener("click",()=>{
+  const id=document.getElementById("editId").value;
+  const q=questions.find(x=>x.id===id);if(!q) return;
+  q.subject=document.getElementById("editSubject").value.trim()||q.subject;
+  q.unit=document.getElementById("editUnit").value.trim()||q.unit;
+  q.diff=document.getElementById("editDifficulty").value.toLowerCase();
+  q.marks=parseInt(document.getElementById("editMarks").value,10)||q.marks;
+  q.co=document.getElementById("editCo").value.trim()||q.co;
+  q.tags=document.getElementById("editTags").value.trim().split(/\s+/).filter(Boolean);
+  q.text=document.getElementById("editText").value.trim()||q.text;
+  document.getElementById("editModal").classList.remove("open");
+  renderFilteredQuestions();refreshStats();
+});
+document.getElementById("editModal").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove("open");});
+
+// =====================================================================
+//  GENERATE PAPER
+// =====================================================================
+document.getElementById("genBtn").addEventListener("click",()=>{
+  const subjectSelect=document.getElementById("paperSubject");
+  const selectedSubjectOption=subjectSelect.options[subjectSelect.selectedIndex];
+  const subject=selectedSubjectOption?.value||"";
+  const subjectLabel=selectedSubjectOption?.text||"All Subjects";
+  const count=Math.max(1,parseInt(document.getElementById("paperCount").value,10)||1);
+  const targetMarks=Math.max(1,parseInt(document.getElementById("paperMarks").value,10)||1);
+  const errEl=document.getElementById("paperError");
+  const exportBtn=document.getElementById("exportBtn");
+
+  // Sort pool: lower usage first
+  let pool=(subject?questions.filter(q=>q.subject===subject):questions.slice())
+    .map(q=>({...q,_usage:usageCountFor(q.id)}))
+    .sort((a,b)=>a._usage-b._usage);
+
+  const selected=knapsackGenerate(pool,count,targetMarks);
+
+  const totalMarks=selected.reduce((s,q)=>s+q.marks,0);
+  const exact=(selected.length===count&&totalMarks===targetMarks);
+
+  if(!exact) errEl.classList.add("show");
+  else errEl.classList.remove("show");
+
+  if(!selected.length){
+    document.getElementById("paperResultWrap").innerHTML=`<div class="empty-note">No questions available for this subject — add some first.</div>`;
+    return;
+  }
+
+  const paper={id:genPId(),date:todayStr(),subject:subjectLabel,marks:totalMarks,questionIds:selected.map(q=>q.id)};
+  papers.push(paper);
+  selected.forEach(q=>{usageHistory.push({qid:q.id,paper:paper.id,date:paper.date,count:1});});
+
+  // Distribution charts
+  const diffCounts={Easy:0,Medium:0,Hard:0};
+  selected.forEach(q=>{const k=capitalize(q.diff);diffCounts[k]=(diffCounts[k]||0)+1;});
+  const unitCounts={};
+  selected.forEach(q=>{unitCounts[q.unit]=(unitCounts[q.unit]||0)+1;});
+  const coCounts={};
+  selected.forEach(q=>{coCounts[q.co]=(coCounts[q.co]||0)+1;});
+  const maxDiff=Math.max(1,...Object.values(diffCounts));
+  const maxUnit=Math.max(1,...Object.values(unitCounts));
+  const maxCo=Math.max(1,...Object.values(coCounts));
+
+  function barsHtml(counts,max){
+    return Object.entries(counts).map(([k,v])=>
+      `<div class="b" style="height:${Math.max(8,(v/max)*100)}%"><span>${k}</span></div>`).join("");
+  }
+
+  document.getElementById("paperResultWrap").innerHTML=`
+    <div class="paper-result">
+      <div class="paper-result-head">
+        <span class="pid">📄 ${paper.id}</span>
+        <span class="pmeta">${paper.subject} · ${paper.date} · ${totalMarks} marks · ${selected.length} questions</span>
+      </div>
+      <div class="qlist" style="max-height:280px;">
+        ${selected.map((q,i)=>`<div style="animation:rise 0.4s cubic-bezier(.2,.8,.2,1) ${i*0.04}s both">${questionCardHtml(q,"",false)}</div>`).join("")}
+      </div>
+      <div class="dist-grid">
+        <div class="dist-card"><div class="dist-label">Difficulty</div><div class="dist-bars">${barsHtml(diffCounts,maxDiff)}</div></div>
+        <div class="dist-card"><div class="dist-label">Unit</div><div class="dist-bars">${barsHtml(unitCounts,maxUnit)}</div></div>
+        <div class="dist-card"><div class="dist-label">Course Outcome</div><div class="dist-bars">${barsHtml(coCounts,maxCo)}</div></div>
+      </div>
+    </div>`;
+
+  exportBtn.style.display="";
+  exportBtn.onclick=()=>exportPaper(paper,selected);
+
+  refreshStats();renderUsage();
+});
+
+function exportPaper(paper, selected){
+  let txt=`QUESTION BANK MANAGEMENT SYSTEM\n`;
+  txt+=`Paper ID: ${paper.id}  |  Subject: ${paper.subject}  |  Date: ${paper.date}  |  Total Marks: ${paper.marks}\n`;
+  txt+=`${"=".repeat(72)}\n\n`;
+  selected.forEach((q,i)=>{
+    txt+=`Q${i+1}. [${q.id}] [${q.marks} marks] [${capitalize(q.diff)}]\n`;
+    txt+=`   ${q.text}\n`;
+    txt+=`   Subject: ${q.subject}  Unit: ${q.unit}  CO: ${q.co}\n\n`;
+  });
+  const blob=new Blob([txt],{type:"text/plain"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`${paper.id}_${paper.subject.replace(/\s+/g,"_")}.txt`;a.click();
+}
+
+// =====================================================================
+//  BENCHMARK
+// =====================================================================
+const ALGOS=["KMP","Naive","Z-Function","Rabin-Karp","Aho-Corasick","Fuzzy"];
+const ALGO_COMPLEXITY={"KMP":"O(n+m)","Naive":"O(n·m)","Z-Function":"O(n+m)","Rabin-Karp":"O(n+m)avg","Aho-Corasick":"O(n+Σp)","Fuzzy":"O(n·m)"};
+const ALGO_COLOR={"KMP":"#7f77dd","Naive":"#d85a30","Z-Function":"#1d9e75","Rabin-Karp":"#e2a04a","Aho-Corasick":"#5ba4e2","Fuzzy":"#c45be2"};
+
+document.getElementById("benchBtn").addEventListener("click",()=>{
+  const query=document.getElementById("benchInput").value.trim();
+  const el=document.getElementById("benchResults");
+  if(!query){el.innerHTML=`<div class="empty-note">Enter a query first.</div>`;return;}
+  el.innerHTML=`<div class="empty-note">Running…</div>`;
+  setTimeout(()=>{
+    const results=ALGOS.map(algo=>{
+      const r=runAlgoOnAll(algo,query);
+      return {algo,matches:r.matched.length,comps:r.comps,elapsed:parseFloat(r.elapsed)};
+    });
+    const maxTime=Math.max(0.001,...results.map(r=>r.elapsed));
+    el.innerHTML=`<div class="benchmark-grid">`+
+      results.map((r,i)=>`
+        <div class="bench-card" style="animation:rise 0.4s cubic-bezier(.2,.8,.2,1) ${i*0.06}s both">
+          <div class="bench-algo" style="color:${ALGO_COLOR[r.algo]||"var(--accent-1)"}">${r.algo}</div>
+          <div style="font-size:10px;color:var(--text-low);margin-bottom:8px">${ALGO_COMPLEXITY[r.algo]||""}</div>
+          <div class="bench-time">${r.elapsed}<span class="bench-unit"> ms</span></div>
+          <div class="bench-comps">${r.comps.toLocaleString()} comparisons · ${r.matches} match(es)</div>
+          <div class="bench-bar-wrap"><div class="bench-bar" style="width:${Math.max(3,r.elapsed/maxTime*100).toFixed(1)}%;background:${ALGO_COLOR[r.algo]||"var(--accent-1)"}"></div></div>
+        </div>`).join("")+`</div>`;
+  },50);
+});
+
+// =====================================================================
+//  USER MANAGEMENT
+// =====================================================================
+document.getElementById("addUserBtn").addEventListener("click",()=>{
+  const uname=document.getElementById("newUsername").value.trim();
+  const pass=document.getElementById("newPassword").value;
+  const role=document.getElementById("newRole").value;
+  const errEl=document.getElementById("userError");
+  const okEl=document.getElementById("userSuccess");
+  if(!uname||!pass){errEl.textContent="Username and password are required.";errEl.classList.add("show");return;}
+  if(accounts.find(a=>a.username===uname)){errEl.textContent="Username already exists.";errEl.classList.add("show");return;}
+  errEl.classList.remove("show");
+  accounts.push({username:uname,password:pass,role});
+  okEl.textContent=`✓ User '${uname}' (${role}) added.`;okEl.classList.add("show");
+  renderUserList();
+  document.getElementById("newUsername").value="";document.getElementById("newPassword").value="";
+  setTimeout(()=>okEl.classList.remove("show"),2500);
+});
+
+// =====================================================================
+//  THEME
+// =====================================================================
+document.getElementById("themeToggle").addEventListener("click",()=>{
+  const root=document.documentElement;
+  const currentTheme=root.getAttribute("data-theme");
+  const isDark = currentTheme === "dark" || (!currentTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  root.setAttribute("data-theme", isDark ? "light" : "dark");
+  document.getElementById("themeToggle").textContent = isDark ? "☀️ Theme" : "🌙 Theme";
+});
+</script>
+</body>
+</html>
