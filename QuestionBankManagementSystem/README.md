@@ -52,6 +52,10 @@ data/generated_papers.txt Paper ID | Date | Subject | Total Marks | QuestionID1,
 Requires a JDK (this project was written/tested against Java 17+ syntax but
 only uses core language features, so any recent JDK works).
 
+The readable Java source files are in `src/`. Compiled `.class` files are
+generated in `out/` when you build locally; they are build artifacts, not
+source code, and are excluded from Git.
+
 ```bash
 cd QuestionBankManagementSystem
 javac -d out $(find src -name "*.java")
