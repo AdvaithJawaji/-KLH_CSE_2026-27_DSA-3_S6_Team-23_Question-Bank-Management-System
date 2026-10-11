@@ -651,11 +651,28 @@
 
 <div class="modal-overlay" id="deleteModal">
   <div class="glass modal-card">
-    <div class="modal-title">Delete Question</div>
-    <div class="modal-text">Are you sure you want to delete <strong id="deleteQuestionLabel">this question</strong>? This action cannot be undone.</div>
+    <div class="modal-title" id="deleteModalTitle">Delete Question</div>
+    <div class="modal-text" id="deleteQuestionPrompt">Are you sure you want to delete this question?</div>
+    <div class="panel-sub" id="deleteQuestionLabel"></div>
     <div class="modal-actions">
       <button class="btn" id="deleteCancelBtn">Cancel</button>
       <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="paperAddModal">
+  <div class="glass modal-card">
+    <div class="modal-title">Add Question to Paper</div>
+    <div class="panel-sub">Choose a question from the bank to add to this paper.</div>
+    <div class="field">
+      <label>Question</label>
+      <select id="paperAddSelect"></select>
+    </div>
+    <div class="inline-error" id="paperAddError"></div>
+    <div class="modal-actions">
+      <button class="btn" id="paperAddCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="paperAddConfirmBtn">Add Question</button>
     </div>
   </div>
 </div>
@@ -733,6 +750,8 @@ let papers = [];
 let usageHistory = [];
 let nextQNum = 57;
 let nextPaperNum = 1;
+let activePaperId = null;
+let deleteContext = "bank";
 
 function genQId() { return "Q" + String(nextQNum++).padStart(3,"0"); }
 function genPId()  { return "P" + String(nextPaperNum++).padStart(3,"0"); }
@@ -975,10 +994,10 @@ document.getElementById("logoutBtn").addEventListener("click",()=>{
 function diffClass(d){return "diff-"+d.toLowerCase();}
 function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();}
 
-function questionCardHtml(q, extra="", showActions=true){
+function questionCardHtml(q, extra="", showActions=true, actionContext="bank"){
   const actions=showActions?`<div class="qactions">
     <button class="btn btn-sm" onclick="openEdit('${q.id}')" title="Edit">✏️</button>
-    <button class="btn btn-sm btn-danger" onclick="openDelete('${q.id}')" title="Delete">🗑</button>
+    <button class="btn btn-sm btn-danger" onclick="${actionContext==="paper"?"openPaperDelete":"openDelete"}('${q.id}')" title="${actionContext==="paper"?"Remove from paper":"Delete question"}">🗑</button>
   </div>`:"";
   return `<div class="qcard" id="card-${q.id}">
     <div class="qtop">
@@ -1199,8 +1218,25 @@ document.getElementById("addBtn").addEventListener("click",()=>{
 function openDelete(id){
   const q = questions.find(x => x.id === id);
   if (!q) return;
+  deleteContext = "bank";
+  document.getElementById("deleteModalTitle").textContent = "Delete Question";
+  document.getElementById("deleteQuestionPrompt").textContent = "This permanently deletes the question from the question bank.";
+  document.getElementById("deleteConfirmBtn").textContent = "Delete";
   document.getElementById("deleteQuestionLabel").textContent = `${q.id} — ${q.subject}`;
   document.getElementById("deleteConfirmBtn").dataset.id = id;
+  document.getElementById("deleteModal").classList.add("open");
+}
+
+function openPaperDelete(id){
+  const paper=papers.find(item=>item.id===activePaperId);
+  const q=questions.find(item=>item.id===id);
+  if(!paper||!q||!paper.questionIds.includes(id)) return;
+  deleteContext="paper";
+  document.getElementById("deleteModalTitle").textContent="Remove Question from Paper";
+  document.getElementById("deleteQuestionPrompt").textContent="This removes the question from this paper only. It will remain in the question bank.";
+  document.getElementById("deleteConfirmBtn").textContent="Remove";
+  document.getElementById("deleteQuestionLabel").textContent=`${q.id} — ${q.subject}`;
+  document.getElementById("deleteConfirmBtn").dataset.id=id;
   document.getElementById("deleteModal").classList.add("open");
 }
 
@@ -1216,7 +1252,19 @@ function deleteQ(id){
 document.getElementById("deleteCancelBtn").addEventListener("click", ()=> document.getElementById("deleteModal").classList.remove("open"));
 document.getElementById("deleteConfirmBtn").addEventListener("click", ()=> {
   const id = document.getElementById("deleteConfirmBtn").dataset.id;
-  if (id) deleteQ(id);
+  if (!id) return;
+  if(deleteContext==="paper"){
+    const paper=papers.find(item=>item.id===activePaperId);
+    if(paper){
+      paper.questionIds=paper.questionIds.filter(qid=>qid!==id);
+      usageHistory=usageHistory.filter(record=>record.paper!==paper.id||record.qid!==id);
+      renderPaper(paper);
+      renderUsage();
+    }
+    document.getElementById("deleteModal").classList.remove("open");
+    return;
+  }
+  deleteQ(id);
 });
 document.getElementById("deleteModal").addEventListener("click", e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
@@ -1249,13 +1297,102 @@ document.getElementById("editSaveBtn").addEventListener("click",()=>{
   q.tags=document.getElementById("editTags").value.trim().split(/\s+/).filter(Boolean);
   q.text=document.getElementById("editText").value.trim()||q.text;
   document.getElementById("editModal").classList.remove("open");
-  renderFilteredQuestions();refreshStats();
+  renderFilteredQuestions();refreshStats();refreshSubjectDropdowns();
+  const paper=papers.find(item=>item.id===activePaperId);
+  if(paper&&paper.questionIds.includes(id)) renderPaper(paper);
 });
 document.getElementById("editModal").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove("open");});
 
 // =====================================================================
 //  GENERATE PAPER
 // =====================================================================
+function getPaperQuestions(paper){
+  return paper.questionIds.map(id=>questions.find(q=>q.id===id)).filter(Boolean);
+}
+
+function renderPaper(paper){
+  const selected=getPaperQuestions(paper);
+  const totalMarks=selected.reduce((sum,q)=>sum+q.marks,0);
+  paper.marks=totalMarks;
+
+  const diffCounts={Easy:0,Medium:0,Hard:0};
+  const unitCounts={},coCounts={};
+  selected.forEach(q=>{
+    const difficulty=capitalize(q.diff);
+    diffCounts[difficulty]=(diffCounts[difficulty]||0)+1;
+    unitCounts[q.unit]=(unitCounts[q.unit]||0)+1;
+    coCounts[q.co]=(coCounts[q.co]||0)+1;
+  });
+  const maxDiff=Math.max(1,...Object.values(diffCounts));
+  const maxUnit=Math.max(1,...Object.values(unitCounts));
+  const maxCo=Math.max(1,...Object.values(coCounts));
+  function barsHtml(counts,max){
+    return Object.entries(counts).map(([key,value])=>
+      `<div class="b" style="height:${Math.max(8,(value/max)*100)}%"><span>${key}</span></div>`).join("");
+  }
+
+  document.getElementById("paperResultWrap").innerHTML=`
+    <div class="paper-result">
+      <div class="paper-result-head">
+        <div>
+          <span class="pid">📄 ${paper.id}</span>
+          <div class="pmeta">${paper.subject} · ${paper.date} · ${totalMarks} marks · ${selected.length} questions</div>
+        </div>
+        <button class="btn btn-primary" id="paperAddQuestionBtn">＋ Add Question</button>
+      </div>
+      ${selected.length?`<div class="qlist" style="max-height:280px;">
+        ${selected.map((q,i)=>`<div style="animation:rise 0.4s cubic-bezier(.2,.8,.2,1) ${i*0.04}s both">${questionCardHtml(q,"",true,"paper")}</div>`).join("")}
+      </div>`:`<div class="empty-note">This paper has no questions. Add one from the question bank.</div>`}
+      <div class="dist-grid">
+        <div class="dist-card"><div class="dist-label">Difficulty</div><div class="dist-bars">${barsHtml(diffCounts,maxDiff)}</div></div>
+        <div class="dist-card"><div class="dist-label">Unit</div><div class="dist-bars">${barsHtml(unitCounts,maxUnit)}</div></div>
+        <div class="dist-card"><div class="dist-label">Course Outcome</div><div class="dist-bars">${barsHtml(coCounts,maxCo)}</div></div>
+      </div>
+    </div>`;
+
+  document.getElementById("paperAddQuestionBtn").addEventListener("click",openPaperAdd);
+  const exportBtn=document.getElementById("exportBtn");
+  exportBtn.style.display="";
+  exportBtn.onclick=()=>exportPaper(paper,getPaperQuestions(paper));
+}
+
+function openPaperAdd(){
+  const paper=papers.find(item=>item.id===activePaperId);
+  if(!paper) return;
+  const existing=new Set(paper.questionIds);
+  const available=questions.filter(q=>!existing.has(q.id)&&
+    (paper.subject.toLowerCase()==="all subjects"||q.subject===paper.subject));
+  const select=document.getElementById("paperAddSelect");
+  const confirm=document.getElementById("paperAddConfirmBtn");
+  const error=document.getElementById("paperAddError");
+  select.innerHTML=available.map(q=>`<option value="${q.id}">${q.id} · ${q.subject} · ${q.marks} marks — ${q.text}</option>`).join("");
+  error.textContent=available.length?"":"No more questions are available for this paper.";
+  error.classList.toggle("show",!available.length);
+  confirm.disabled=!available.length;
+  document.getElementById("paperAddModal").classList.add("open");
+}
+
+document.getElementById("paperAddCancelBtn").addEventListener("click",()=>document.getElementById("paperAddModal").classList.remove("open"));
+document.getElementById("paperAddModal").addEventListener("click",event=>{
+  if(event.target===event.currentTarget) event.currentTarget.classList.remove("open");
+});
+document.getElementById("paperAddConfirmBtn").addEventListener("click",()=>{
+  const paper=papers.find(item=>item.id===activePaperId);
+  const id=document.getElementById("paperAddSelect").value;
+  const question=questions.find(item=>item.id===id);
+  const error=document.getElementById("paperAddError");
+  if(!paper||!question||paper.questionIds.includes(id)){
+    error.textContent="Choose a question that is not already in this paper.";
+    error.classList.add("show");
+    return;
+  }
+  paper.questionIds.push(id);
+  usageHistory.push({qid:id,paper:paper.id,date:paper.date,count:1});
+  document.getElementById("paperAddModal").classList.remove("open");
+  renderPaper(paper);
+  renderStatsAndUsage();
+});
+
 document.getElementById("genBtn").addEventListener("click",()=>{
   const subjectSelect=document.getElementById("paperSubject");
   const selectedSubjectOption=subjectSelect.options[subjectSelect.selectedIndex];
@@ -1264,7 +1401,6 @@ document.getElementById("genBtn").addEventListener("click",()=>{
   const count=Math.max(1,parseInt(document.getElementById("paperCount").value,10)||1);
   const targetMarks=Math.max(1,parseInt(document.getElementById("paperMarks").value,10)||1);
   const errEl=document.getElementById("paperError");
-  const exportBtn=document.getElementById("exportBtn");
 
   // Sort pool: lower usage first
   let pool=(subject?questions.filter(q=>q.subject===subject):questions.slice())
@@ -1286,45 +1422,17 @@ document.getElementById("genBtn").addEventListener("click",()=>{
 
   const paper={id:genPId(),date:todayStr(),subject:subjectLabel,marks:totalMarks,questionIds:selected.map(q=>q.id)};
   papers.push(paper);
+  activePaperId=paper.id;
   selected.forEach(q=>{usageHistory.push({qid:q.id,paper:paper.id,date:paper.date,count:1});});
-
-  // Distribution charts
-  const diffCounts={Easy:0,Medium:0,Hard:0};
-  selected.forEach(q=>{const k=capitalize(q.diff);diffCounts[k]=(diffCounts[k]||0)+1;});
-  const unitCounts={};
-  selected.forEach(q=>{unitCounts[q.unit]=(unitCounts[q.unit]||0)+1;});
-  const coCounts={};
-  selected.forEach(q=>{coCounts[q.co]=(coCounts[q.co]||0)+1;});
-  const maxDiff=Math.max(1,...Object.values(diffCounts));
-  const maxUnit=Math.max(1,...Object.values(unitCounts));
-  const maxCo=Math.max(1,...Object.values(coCounts));
-
-  function barsHtml(counts,max){
-    return Object.entries(counts).map(([k,v])=>
-      `<div class="b" style="height:${Math.max(8,(v/max)*100)}%"><span>${k}</span></div>`).join("");
-  }
-
-  document.getElementById("paperResultWrap").innerHTML=`
-    <div class="paper-result">
-      <div class="paper-result-head">
-        <span class="pid">📄 ${paper.id}</span>
-        <span class="pmeta">${paper.subject} · ${paper.date} · ${totalMarks} marks · ${selected.length} questions</span>
-      </div>
-      <div class="qlist" style="max-height:280px;">
-        ${selected.map((q,i)=>`<div style="animation:rise 0.4s cubic-bezier(.2,.8,.2,1) ${i*0.04}s both">${questionCardHtml(q,"",false)}</div>`).join("")}
-      </div>
-      <div class="dist-grid">
-        <div class="dist-card"><div class="dist-label">Difficulty</div><div class="dist-bars">${barsHtml(diffCounts,maxDiff)}</div></div>
-        <div class="dist-card"><div class="dist-label">Unit</div><div class="dist-bars">${barsHtml(unitCounts,maxUnit)}</div></div>
-        <div class="dist-card"><div class="dist-label">Course Outcome</div><div class="dist-bars">${barsHtml(coCounts,maxCo)}</div></div>
-      </div>
-    </div>`;
-
-  exportBtn.style.display="";
-  exportBtn.onclick=()=>exportPaper(paper,selected);
+  renderPaper(paper);
 
   refreshStats();renderUsage();
 });
+
+function renderStatsAndUsage(){
+  refreshStats();
+  renderUsage();
+}
 
 function exportPaper(paper, selected){
   let txt=`QUESTION BANK MANAGEMENT SYSTEM\n`;

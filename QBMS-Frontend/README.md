@@ -32,6 +32,8 @@ Then open `http://localhost:8000` in your browser.
 - **Real (works in your browser session):** login, adding questions, searching
   (Naive/KMP/Z-Function/Rabin-Karp/Aho-Corasick multi-keyword/Fuzzy edit-distance),
   generating a paper (real selection + real distribution charts), usage history.
+  Generated papers can be customized by adding another bank question, editing a
+  question, or removing it from that paper without deleting it from the bank.
 - **Not yet connected:** this is a standalone frontend. It does **not** read or
   write your Java backend's `data/questions.txt` etc. Everything lives in a
   JavaScript array that resets if you refresh the page.
