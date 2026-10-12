@@ -421,5 +421,8 @@ The result is a fully functional academic question bank management system with a
 ## Contributors
 
 This repository was developed by the team working on the DSA-3 Question Bank Management System.
+2520030524 - J Advaith
+2520030534 - P Shashe Preetham
+2520030129 - O Sai Sujith
 
 If you are using or extending this project, feel free to update or improve the documentation and functionality as needed.
